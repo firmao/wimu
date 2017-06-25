@@ -42,6 +42,8 @@ Backup Database:
 
 mysqldump -u root -p linklion2 > file.sql
 
+You can also download everthing in one pack:
+
 
 # License
 
