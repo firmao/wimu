@@ -43,7 +43,11 @@ Backup Database:
 mysqldump -u root -p linklion2 > file.sql
 
 You can also download everthing in one pack:
+https://github.com/firmao/wimu/blob/master/wimu.zip
 
+or
+
+https://doi.org/10.6084/m9.figshare.5143207
 
 # License
 
