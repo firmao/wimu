@@ -10,7 +10,7 @@ We rank the corresponding datasets by following the rationale upon which a datas
 We finally show use-cases of applications that can immediately benefit from our simple yet useful service.
 
 # Instructions to use:
-Firstly you need Java 8, Tomcat 8 and MySQL (latest version).
+Firstly you need Java 8, Tomcat 6 and MySQL (latest version).
 You should create your Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
 
 https://github.com/firmao/wimu/blob/master/wimu_db/src/FirstOptimization.java
