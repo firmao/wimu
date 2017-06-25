@@ -49,6 +49,11 @@ or
 
 https://doi.org/10.6084/m9.figshare.5143207
 
+# Contact
+In case of any troble, please just contact Andre Valdestilhas:
+
+valdestilhas@informatik.uni-leipzig.de
+
 # License
 
 licensed under Apache 2.0
