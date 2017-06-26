@@ -32,10 +32,6 @@ and import into the Database linklion2, with the command:
 mysql -u root -p linklion2 < backup_linklion2_final3.sql
 </pre>
 
-In video:
-
-
-
 - `DataBase type`: MySQL
 
 - `DataBase name`: linklion2
@@ -48,6 +44,11 @@ Backup Database:
 <pre>
 mysqldump -u root -p linklion2 > BackupFile.sql
 </pre>
+
+In video:
+
+https://youtu.be/oPGxZJvDSSw
+
 
 If you wanna to create your own Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
 https://github.com/firmao/wimu/blob/master/wimu_db/src/FirstOptimization.java
