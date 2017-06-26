@@ -20,6 +20,15 @@ The service to access the Database run with the Tomcat 6.
 
 https://github.com/firmao/wimu/tree/master/wimu_ws
 
+## Example of usage:
+<pre>
+curl http://139.18.8.58:8080/LinkLion2_WServ/Find?uri=http://semanticscience.org/resource/SIO_000272
+
+Output(JSON):
+[{"EndPoint":"http://biordf.net/sparql","CDataType":"1"},{"EndPoint":"http://lov.okfn.org/dataset/lov/sparql","CDataType":"4"}]
+
+</pre>
+
 # Database:
 https://doi.org/10.6084/m9.figshare.5005241.v1
 
