@@ -20,11 +20,21 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 # Instructions:
 
-## Database index:
-If you wanna to create your own Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
-https://github.com/firmao/wimu/blob/master/wimu_db/src/FirstOptimization.java
+## Database index (creating locally):
 
-or you can donwload from: https://doi.org/10.6084/m9.figshare.5005241.v1
+Create the structure of the database inside MySql:
+https://github.com/firmao/linklion2/blob/master/DB_Tables_StoredProcedure.sql
+
+Donwload the Database index from: https://doi.org/10.6084/m9.figshare.5005241.v1
+and import into the Database linklion2, with the command:
+
+<pre>
+mysql -u root -p linklion2 < backup_linklion2_final3.sql
+</pre>
+
+In video:
+
+
 
 - `DataBase type`: MySQL
 
@@ -34,17 +44,17 @@ or you can donwload from: https://doi.org/10.6084/m9.figshare.5005241.v1
 
 - `password`: sameas
 
-Only the structure of the database:
-https://github.com/firmao/linklion2/blob/master/DB_Tables_StoredProcedure.sql
-
-Restore Database:
-<pre>
-mysql -u root -p linklion2 < file.sql
-</pre>
 Backup Database:
 <pre>
-mysqldump -u root -p linklion2 > file.sql
+mysqldump -u root -p linklion2 > BackupFile.sql
 </pre>
+
+If you wanna to create your own Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
+https://github.com/firmao/wimu/blob/master/wimu_db/src/FirstOptimization.java
+
+In video:
+https://youtu.be/13cwc_UwfPc
+
 
 # Semantic Web service
 The service to access the Database works with the Tomcat 6.
@@ -53,7 +63,7 @@ https://github.com/firmao/wimu/tree/master/wimu_ws
 
 You can also clone the whole repository in which will include both projects (Database index creation and the webservice).
 
-## Example of usage:
+## Example of usage (Command line mode):
 <pre>
 curl http://139.18.8.58:8080/LinkLion2_WServ/Find?uri=http://semanticscience.org/resource/SIO_000272
 
