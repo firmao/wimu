@@ -18,11 +18,33 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 -`MySQL (latest version)`.
 
-# Instructions to use:
+# Instructions:
+
+## Database index:
 If you wanna to create your own Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
 https://github.com/firmao/wimu/blob/master/wimu_db/src/FirstOptimization.java
 
 or you can donwload from: https://doi.org/10.6084/m9.figshare.5005241.v1
+
+- `DataBase type`: MySQL
+
+- `DataBase name`: linklion2
+
+- `username`: root
+
+- `password`: sameas
+
+Only the structure of the database:
+https://github.com/firmao/linklion2/blob/master/DB_Tables_StoredProcedure.sql
+
+Restore Database:
+<pre>
+mysql -u root -p linklion2 < file.sql
+</pre>
+Backup Database:
+<pre>
+mysqldump -u root -p linklion2 > file.sql
+</pre>
 
 # Semantic Web service
 The service to access the Database works with the Tomcat 6.
@@ -50,28 +72,7 @@ Output(JSON):
 ## A video demonstrating the usage
 
 
-# Database:
-https://doi.org/10.6084/m9.figshare.5005241.v1
 
-- `DataBase type`: MySQL
-
-- `DataBase name`: linklion2
-
-- `username`: root
-
-- `password`: sameas
-
-Only the structure of the database:
-https://github.com/firmao/linklion2/blob/master/DB_Tables_StoredProcedure.sql
-
-Restore Database:
-<pre>
-mysql -u root -p linklion2 < file.sql
-</pre>
-Backup Database:
-<pre>
-mysqldump -u root -p linklion2 > file.sql
-</pre>
 
 # Contact
 In case of questions, feel free to contact André Valdestilhas <valdestilhas@informatik.uni-leipzig.de> or Tommaso Soru <tsoru@informatik.uni-leipzig.de>
