@@ -16,7 +16,7 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 -`Tomcat 6`. 
 
--`MySQL (latest version)`.
+-`MySQL (latest version) and the Java driver to access the database`.
 
 # Instructions:
 
