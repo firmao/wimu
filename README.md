@@ -20,6 +20,15 @@ The service to access the Database run with the Tomcat 6.
 
 https://github.com/firmao/wimu/tree/master/wimu_ws
 
+
+You can also download everthing in one pack:
+
+https://github.com/firmao/wimu/blob/master/wimu.zip
+
+or
+
+https://doi.org/10.6084/m9.figshare.5143207
+
 ## Example of usage:
 <pre>
 curl http://139.18.8.58:8080/LinkLion2_WServ/Find?uri=http://semanticscience.org/resource/SIO_000272
@@ -32,31 +41,25 @@ Output(JSON):
 # Database:
 https://doi.org/10.6084/m9.figshare.5005241.v1
 
-DataBase type: MySQL
+- `DataBase type`: MySQL
 
-DataBase name: linklion2
+- `DataBase name`: linklion2
 
-username: root
+- `username`: root
 
-password: sameas
+- `password`: sameas
 
 Only the structure of the database:
 https://github.com/firmao/linklion2/blob/master/DB_Tables_StoredProcedure.sql
 
 Restore Database:
-
+<pre>
 mysql -u root -p linklion2 < file.sql
-
+</pre>
 Backup Database:
-
+<pre>
 mysqldump -u root -p linklion2 > file.sql
-
-You can also download everthing in one pack:
-https://github.com/firmao/wimu/blob/master/wimu.zip
-
-or
-
-https://doi.org/10.6084/m9.figshare.5143207
+</pre>
 
 # Contact
 In case of any troble, please just contact André Valdestilhas <valdestilhas@informatik.uni-leipzig.de> or Tommaso Soru <tsoru@informatik.uni-leipzig.de>
