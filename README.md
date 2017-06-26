@@ -52,13 +52,15 @@ The service to access the Database works with the Tomcat 6.
 https://github.com/firmao/wimu/tree/master/wimu_ws
 
 
-You can also download everthing in one pack:
+You can also download the two eclipse projects, including the libraries in one pack:
 
 https://github.com/firmao/wimu/blob/master/wimu.zip
 
 or
 
 https://doi.org/10.6084/m9.figshare.5143207
+
+`The difference here with cloning the whole directory the eclipse project files.`
 
 ## Example of usage:
 <pre>
