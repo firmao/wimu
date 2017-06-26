@@ -61,6 +61,10 @@ https://doi.org/10.6084/m9.figshare.5143207
 # Contact
 In case of any troble, please just contact André Valdestilhas <valdestilhas@informatik.uni-leipzig.de> or Tommaso Soru <tsoru@informatik.uni-leipzig.de>
 
+
+## Acknowledgment
+This research has been partially supported by \emph{CNPq} Brazil under grants No. 201536/2014-5 and H2020 projects SLIPO (GA no. 731581) and HOBBIT (GA no. 688227) as well as the DFG project LinkingLOD (project no. NG 105/3-2), the BMWI Projects SAKE (project no. 01MD15006E) and GEISER (project no. 01MD16014).
+
 # License
 
 licensed under Apache 2.0
