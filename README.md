@@ -9,14 +9,20 @@ Our service aims at indexing URIs and their use in order to let Linked Data cons
 We rank the corresponding datasets by following the rationale upon which a dataset contributes to the definition of a URI proportionally to the number of datatype triples.
 We finally show use-cases of applications that can immediately benefit from our simple yet useful service.
 
-# Instructions to use:
-Firstly you need Java 8, Tomcat 6 and MySQL (latest version).
-You should create your Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
+# Requirements
+Java 8.
+Jena.
+Tomcat 6. 
+MySQL (latest version).
 
+# Instructions to use:
+If you wanna to create your own Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
 https://github.com/firmao/wimu/blob/master/wimu_db/src/FirstOptimization.java
 
+or you can donwload from: https://doi.org/10.6084/m9.figshare.5005241.v1
+
 # Semantic Web service
-The service to access the Database run with the Tomcat 6.
+The service to access the Database works with the Tomcat 6.
 
 https://github.com/firmao/wimu/tree/master/wimu_ws
 
