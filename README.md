@@ -45,17 +45,14 @@ Backup Database:
 mysqldump -u root -p linklion2 > BackupFile.sql
 </pre>
 
-In video:
-
+## In video:
 https://youtu.be/oPGxZJvDSSw
-
 
 If you wanna to create your own Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
 https://github.com/firmao/wimu/blob/master/wimu_db/src/FirstOptimization.java
 
-In video:
+## In video:
 https://youtu.be/13cwc_UwfPc
-
 
 # Semantic Web service
 The service to access the Database works with the Tomcat 6.
@@ -73,10 +70,8 @@ Output(JSON):
 
 You can also clone the whole repository in which will include both projects (Database index creation and the webservice).
 
-## A video demonstrating the usage
-
-
-
+## In video:
+https://youtu.be/-ZMcfhfYjm0
 
 # Contact
 In case of questions, feel free to contact André Valdestilhas <valdestilhas@informatik.uni-leipzig.de> or Tommaso Soru <tsoru@informatik.uni-leipzig.de>
