@@ -10,10 +10,10 @@ We rank the corresponding datasets by following the rationale upon which a datas
 We finally show use-cases of applications that can immediately benefit from our simple yet useful service.
 
 # Requirements
-Java 8.
-Jena.
-Tomcat 6. 
-MySQL (latest version).
+-`Java 8`.
+-`Jena`.
+-`Tomcat 6`. 
+-`MySQL (latest version)`.
 
 # Instructions to use:
 If you wanna to create your own Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
