@@ -38,6 +38,9 @@ Output(JSON):
 
 </pre>
 
+## A video demonstrating the usage
+
+
 # Database:
 https://doi.org/10.6084/m9.figshare.5005241.v1
 
@@ -62,7 +65,7 @@ mysqldump -u root -p linklion2 > file.sql
 </pre>
 
 # Contact
-In case of any troble, please just contact André Valdestilhas <valdestilhas@informatik.uni-leipzig.de> or Tommaso Soru <tsoru@informatik.uni-leipzig.de>
+In case of questions, feel free to contact André Valdestilhas <valdestilhas@informatik.uni-leipzig.de> or Tommaso Soru <tsoru@informatik.uni-leipzig.de>
 
 
 ## Acknowledgment
