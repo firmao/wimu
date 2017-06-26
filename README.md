@@ -62,8 +62,6 @@ The service to access the Database works with the Tomcat 6.
 
 https://github.com/firmao/wimu/tree/master/wimu_ws
 
-You can also clone the whole repository in which will include both projects (Database index creation and the webservice).
-
 ## Example of usage (Command line mode):
 <pre>
 curl http://139.18.8.58:8080/LinkLion2_WServ/Find?uri=http://semanticscience.org/resource/SIO_000272
@@ -72,6 +70,8 @@ Output(JSON):
 [{"EndPoint":"http://biordf.net/sparql","CDataType":"1"},{"EndPoint":"http://lov.okfn.org/dataset/lov/sparql","CDataType":"4"}]
 
 </pre>
+
+You can also clone the whole repository in which will include both projects (Database index creation and the webservice).
 
 ## A video demonstrating the usage
 
