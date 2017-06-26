@@ -11,8 +11,11 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 # Requirements
 -`Java 8`.
+
 -`Jena`.
+
 -`Tomcat 6`. 
+
 -`MySQL (latest version)`.
 
 # Instructions to use:
