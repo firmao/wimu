@@ -76,6 +76,23 @@ https://youtu.be/-ZMcfhfYjm0
 # Contact
 In case of questions, feel free to contact André Valdestilhas <valdestilhas@informatik.uni-leipzig.de> or Tommaso Soru <tsoru@informatik.uni-leipzig.de>
 
+# Zenodo
+Share
+
+Cite as
+
+Andre Valdestilhas. (2017, June 27). firmao/wimu: Where is my URI?. Zenodo. http://doi.org/10.5281/zenodo.819761
+## BibTex
+<pre>
+@misc{andre_valdestilhas_2017_819761,
+  author       = {Andre Valdestilhas},
+  title        = {firmao/wimu: Where is my URI?},
+  month        = jun,
+  year         = 2017,
+  doi          = {10.5281/zenodo.819761},
+  url          = {https://doi.org/10.5281/zenodo.819761}
+}
+</pre>
 
 ## Acknowledgment
 This research has been partially supported by CNPq Brazil under grants No. 201536/2014-5 and H2020 projects SLIPO (GA no. 731581) and HOBBIT (GA no. 688227) as well as the DFG project LinkingLOD (project no. NG 105/3-2), the BMWI Projects SAKE (project no. 01MD15006E) and GEISER (project no. 01MD16014).
