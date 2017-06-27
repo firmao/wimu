@@ -18,7 +18,7 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 -`MySQL (latest version) and the Java driver to access the database`.
 
-# Instructions:
+# Build instructions:
 
 ## Database index (creating locally):
 
