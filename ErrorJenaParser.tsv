@@ -1,0 +1,77 @@
+http://api.kasabi.com/dataset/english-heritage/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://rdf.myexperiment.org/sparql/	Endpoint returned Content-Type: application/xml which is not currently supported for SELECT queries
+http://data.i2g.pl/sparql?default-graph-uri=http%3A%2F%2Fdata.i2g.pl%2Finsigos%2Fpolgos%2Fpkd2007-full&qtxt=select%2Bdistinct%2B%3FConcept%2Bwhere%2B%7B[]%2Ba%2B%3FConcept%7D&format=text%2Fhtml&timeout=0&debug=on	Error making the query, see cause for details
+http://api.kasabi.com/api/sparql-endpoint-near	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://api.kasabi.com/dataset/discogs/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://sparql.data.southampton.ac.uk/	Error making the query, see cause for details
+http://api.kasabi.com/dataset/musicnet/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://data.i2g.pl/sparql?default-graph-uri=http%3A%2F%2Fdata.i2g.pl%2Finsigos%2Fhz%2Fgeo-full&qtxt=select%2Bdistinct%2B%3FConcept%2Bwhere%2B%7B[]%2Ba%2B%3FConcept%7D&format=text%2Fhtml&timeout=0&debug=on	Error making the query, see cause for details
+http://smartcity.linkeddata.es/BECA/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://www.zaragoza.es/datosabiertos/sparql?query=SELECT%2B*%2BWHERE%2B%7B%2B%0D%0A%2B%3Fs%2Ba%2B%3Chttp%3A%2F%2Fpurl.org%2Fctic%2Finfraestructuras%2Flocalizacion%23Calle%3E%2B%3B%0D%0A%2B%3Fp%2B%3Fo%2B.%0D%0A%7D&format=application/sparql-results%2Bjson	SERVICE URL overrides the 'query' SPARQL protocol parameter
+https://data.ox.ac.uk/sparql/	XMLStreamException: ParseError at [row,col]:[314664,1]
+Message: XML-Dokumentstrukturen müssen innerhalb derselben Entity beginnen und enden.
+http://api.kasabi.com/dataset/federal-reserve-economic-data/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://oecd.270a.info/sparql	Error making the query, see cause for details
+http://linguistic.linkeddata.es/terminesp/sparql-editor	Error making the query, see cause for details
+http://api.kasabi.com/dataset/yahoo-geoplanet/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://abs.270a.info/sparql	Error making the query, see cause for details
+http://data.uni-muenster.de/php/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://data.i2g.pl/sparql?default-graph-uri=http%3A%2F%2Fdata.i2g.pl%2Finsigos%2Fhz%2Fcn-full&qtxt=select%2Bdistinct%2B%3FConcept%2Bwhere%2B%7B[]%2Ba%2B%3FConcept%7D&format=text%2Fhtml&timeout=0&debug=on	Error making the query, see cause for details
+http://vocab.nerc.ac.uk/sparql/	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://lod.ac/bdls/sparql	Error making the query, see cause for details
+http://api.kasabi.com/dataset/renewable-energy-generators/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://factforge.net/sparql	null
+http://demo.spraakdata.gu.se/ltlod/test/	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://api.kasabi.com/dataset/ecco-tcp-eighteenth-century-collections-online-texts/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://revyu.com/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://beta.sparql.uniprot.org/	XMLStreamException: ParseError at [row,col]:[-82510491,8]
+Message: XML-Dokumentstrukturen müssen innerhalb derselben Entity beginnen und enden.
+http://api.kasabi.com/dataset/jisc-cetis-project-directory/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://catalogus-professorum.org/sparql	Error making the query, see cause for details
+http://education.data.gov.uk/doc/school	Error making the query, see cause for details
+http://ecb.270a.info/sparql	Error making the query, see cause for details
+http://api.kasabi.com/dataset/pali-english-lexicon/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://spending.lichfielddc.gov.uk/sparql	Error making the query, see cause for details
+http://api.kasabi.com/dataset/nasa/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://api.kasabi.com/dataset/sanskrit-english-lexicon/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://linguistic.linkeddata.es/apertium/sparql-editor/	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://bis.270a.info/sparql	Error making the query, see cause for details
+http://tcga.deri.ie	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://environment.data.gov.uk/bwq/sparql.html	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://data.salzburgerland.com/dataset/events/resource/20381e0b-23c3-439c-804c-22c4f794172a	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://www.sparql.org/sparql.html	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://fao.270a.info/sparql	Error making the query, see cause for details
+http://linkedopencommerce.com/sparql	Error making the query, see cause for details
+http://crime.rkbexplorer.com/sparql/	Failed when initializing the StAX parsing engine
+http://api.kasabi.com/dataset/un-hazardous-material-numbers/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://worldbank.270a.info/sparql	Error making the query, see cause for details
+http://www.isocat.org/datcat/DC-1333	Error making the query, see cause for details
+http://id.ndl.go.jp/auth/ndlsh/	Endpoint returned Content-Type: text/plain which is not currently supported for SELECT queries
+http://data.cnr.it/sparql/	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://data.open.ac.uk/query	XMLStreamException: ParseError at [row,col]:[12080415,1]
+Message: XML-Dokumentstrukturen müssen innerhalb derselben Entity beginnen und enden.
+http://foreign.rkbexplorer.com/sparql	Failed when initializing the StAX parsing engine
+http://landregistry.data.gov.uk/landregistry/sparql/sparql.html	Error making the query, see cause for details
+http://id.ndl.go.jp/auth/ndla/	Endpoint returned Content-Type: text/plain which is not currently supported for SELECT queries
+http://beta.sparql.uniprot.org	XMLStreamException: ParseError at [row,col]:[-82586528,6]
+Message: XML-Dokumentstrukturen müssen innerhalb derselben Entity beginnen und enden.
+http://api.kasabi.com/dataset/foodista/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://lov.okfn.org/endpoint/lov	Endpoint returned Content-Type: text/plain which is not currently supported for SELECT queries
+http://dwrgsweb-lb.rgs.mef.gov.it/DWRGSXL/pages/od/indexEndpoint.jsp	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://data.lenka.no/sparql	Error making the query, see cause for details
+http://data.linkedct.org/sparql	Error making the query, see cause for details
+http://api.kasabi.com/dataset/openflights-routes/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://api.kasabi.com/dataset/bricklink/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://www.zaragoza.es/datosabiertos/sparql?query=SELECT%2B*%2BWHERE%2B%7B%2B%0D%0A%2B%2B%3Fs%2Ba%2B%3Chttp%3A%2F%2Fidi.fundacionctic.org%2Fcruzar%2Fturismo%23Evento-de-zaragoza%3E%2B.%0D%0A%2B%2B%3Fs%2B%3Fp%2B%3Fo%2B.%2B%2B%0D%0A%7D&format=application/sparql-results%2Bjson	SERVICE URL overrides the 'query' SPARQL protocol parameter
+http://data.nature.com/query	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://kasabi.com/dataset/brandweer-amsterdam-amstelland-dispatch-messages	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://data.bibsys.no/data/query_authority.html	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://dati.culturaitalia.it/sparql/index.jsp?locale=en	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://opendatacommunities.org/sparql	Error making the query, see cause for details
+http://semantic-web-journal.com:3030/sparql.tpl	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://desaparecidos.ice.ufjf.br/index.php/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://oai.rkbexplorer.com/sparql/	Failed when initializing the StAX parsing engine
+https://ckannet-storage.commondatastorage.googleapis.com/2014-05-27T19:10:22.652Z/dogdb-queries-tar.gz	Endpoint returned Content-Type: application/x-gzip which is not currently supported for SELECT queries
+http://libver.math.auth.gr/sparql	Error making the query, see cause for details
+http://kasabi.com/api/sparql-endpoint-foodista	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
+http://api.kasabi.com/dataset/prelinger-archives/apis/sparql	Endpoint returned Content-Type: text/html which is not currently supported for SELECT queries
