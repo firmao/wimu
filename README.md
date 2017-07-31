@@ -85,7 +85,7 @@ Andre Valdestilhas. (2017, June 27). firmao/wimu: Where is my URI?. Zenodo. http
 ## BibTex
 <pre>
 @misc{andre_valdestilhas_2017_819761,
-  author       = {Andre Valdestilhas},
+  author       = {Andre Valdestilhas, Tommaso Soru, Markus Nentwig, Edgard Marx and Axel-Cyrille Ngonga Ngomo},
   title        = {firmao/wimu: Where is my URI?},
   month        = jun,
   year         = 2017,
