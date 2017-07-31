@@ -1,0 +1,4 @@
+select ?x (count(?z) as ?c){
+?x ?y ?z .
+filter (isliteral(?z))
+} group by ?x
