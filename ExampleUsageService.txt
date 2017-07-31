@@ -1,0 +1,4 @@
+curl http://139.18.8.58:8080/LinkLion2_WServ/Find?uri=http://semanticscience.org/resource/SIO_000272
+
+Output(JSON):
+[{"EndPoint":"http://biordf.net/sparql","CDataType":"1"},{"EndPoint":"http://lov.okfn.org/dataset/lov/sparql","CDataType":"4"}]
