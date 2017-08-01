@@ -23,7 +23,7 @@ We finally show use-cases of applications that can immediately benefit from our 
 ## Database index (creating locally):
 
 Create the structure of the database inside MySql:
-https://github.com/firmao/linklion2/blob/master/DB_Tables_StoredProcedure.sql
+https://github.com/dice-group/wimu/blob/master/DB_Tables_StoredProcedure.sql
 
 Donwload the Database index from: https://doi.org/10.6084/m9.figshare.5005241.v1
 and import into the Database linklion2, with the command:
@@ -49,7 +49,7 @@ mysqldump -u root -p linklion2 > BackupFile.sql
 https://youtu.be/oPGxZJvDSSw
 
 If you wanna to create your own Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
-https://github.com/firmao/wimu/blob/master/wimu_db/src/FirstOptimization.java
+https://github.com/dice-group/wimu/blob/master/wimu_db/src/FirstOptimization.java
 
 ## In video:
 https://youtu.be/13cwc_UwfPc
@@ -57,11 +57,11 @@ https://youtu.be/13cwc_UwfPc
 # Semantic Web service
 The service to access the Database works with the Tomcat 6.
 
-https://github.com/firmao/wimu/tree/master/wimu_ws
+https://github.com/dice-group/wimu/tree/master/wimu_ws
 
 ## Example of usage (Command line mode):
 <pre>
-curl http://139.18.8.58:8080/LinkLion2_WServ/Find?uri=http://semanticscience.org/resource/SIO_000272
+curl http://139.18.8.58:8080/wimu_ws/Find?uri=http://semanticscience.org/resource/SIO_000272
 
 Output(JSON):
 [{"EndPoint":"http://biordf.net/sparql","CDataType":"1"},{"EndPoint":"http://lov.okfn.org/dataset/lov/sparql","CDataType":"4"}]
