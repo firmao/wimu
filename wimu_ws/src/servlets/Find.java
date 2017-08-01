@@ -1,6 +1,8 @@
 package servlets;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Map;
 import java.util.Set;
 
@@ -99,8 +101,8 @@ public class Find extends HttpServlet {
 
 	private void findWeb(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String uri = request.getParameter("uri1");
-		uri = uri.replaceAll("123nada", "#").trim(); // to solve some problems
-														// with QueryString.
+		//uri = uri.replaceAll("123nada", "#").trim(); // to solve some problems
+		final String uri1 = uri;												// with QueryString.
 		request.getSession().setAttribute("uri1", uri);
 
 		Map<String, Integer> result = DBUtil.findEndPoint(uri);
@@ -112,8 +114,9 @@ public class Find extends HttpServlet {
 				String endPoint = elem.getKey();
 				int dType = elem.getValue();
 				try {
+					String endPointS = endPoint + "?query=describe <" + URLEncoder.encode(uri1, "UTF-8") +">";
 					response.getOutputStream()
-							.println("<tr> " + "<td><a href='"+endPoint+"'>" + endPoint + "</a></td> " + "<td>" + dType + "</td> " + "</tr>");
+					.println("<tr> " + "<td><a href='"+ endPointS +"'>" + endPoint + "</a></td> " + "<td>" + dType + "</td> " + "</tr>");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
