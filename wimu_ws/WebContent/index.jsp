@@ -43,7 +43,7 @@ position:absolute;
 }
 
 </style>
-
+<a href="https://github.com/firmao/wimu"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://camo.githubusercontent.com/82b228a3648bf44fc1163ef44c62fcc60081495e/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f7265645f6161303030302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_red_aa0000.png"></a>
 	<h1>Where is my URI?</h1>
 	<input type="text" id="uri" size="80">
 	<button onclick="findEndPoint()">Find Datasets</button>
@@ -63,22 +63,22 @@ position:absolute;
 		function findEndPoint() {
 			document.getElementById('loadingDiv').style.display = "block";
 			document.getElementById('divhider').style.display = "block";
-			var url = document.getElementById("uri").value.replace("#",
-					"123nada");
+			var url = document.getElementById("uri").value;
+			url=encodeURIComponent(url);
 			window.location.assign("Find?uri1=" + url);
 		}
 		function findURI() {
 			document.getElementById('loadingDiv').style.display = "block";
 			document.getElementById('divhider').style.display = "block";
-			var url = document.getElementById("uri").value.replace("#",
-					"123nada");
+			var url = document.getElementById("uri").value;
+			url=encodeURIComponent(url);
 			window.location.assign("Find?endpoint=" + url);
 		}
 		function findSQL() {
 			document.getElementById('loadingDiv').style.display = "block";
 			document.getElementById('divhider').style.display = "block";
-			var url = document.getElementById("uri").value.replace("#",
-					"123nada");
+			var url = document.getElementById("uri").value;
+			url=encodeURIComponent(url);
 			window.location.assign("Find?SQL=" + url);
 		}
 	</script>
