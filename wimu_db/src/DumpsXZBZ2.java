@@ -41,14 +41,15 @@ public class DumpsXZBZ2 {
 		long start = System.currentTimeMillis();
 
 		int cores = Runtime.getRuntime().availableProcessors();
-		Set<String> setAllFileServer = getFileNames();
+		List<String> lstURLDumps = FileUtils.readLines(new File("dumpsLocation.txt"), "UTF-8");
+		Set<String> setAllFileServer = getFileNames(lstURLDumps);
 
-		//setAllFileServer.forEach(fileName -> {
+		// setAllFileServer.forEach(fileName -> {
 		for (String fileName : setAllFileServer) {
 			String justFName = getURLFileName(fileName);
-			if(alreadyProcessed.contains(justFName)) continue;
-			
-			
+			if (alreadyProcessed.contains(justFName))
+				continue;
+
 			/*
 			 * get(download) only files that are not processed yet according to
 			 * the number of cores.
@@ -70,8 +71,8 @@ public class DumpsXZBZ2 {
 					errorFiles.add(file.getName());
 				}
 			});
-		//});
-		}	
+			// });
+		}
 		long totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total Time(ms): " + totalTime);
 	}
@@ -159,9 +160,10 @@ public class DumpsXZBZ2 {
 
 					// System.out.println(subject.getURI());
 					if (triple.getObject().isLiteral()) {
-						//System.out.println("<" + triple.getSubject().getURI() + "> <" + triple.getPredicate().getURI()
-						//		+ "> " + triple.getObject().toString() + " .");
-						
+						// System.out.println("<" + triple.getSubject().getURI()
+						// + "> <" + triple.getPredicate().getURI()
+						// + "> " + triple.getObject().toString() + " .");
+
 						try {
 							DBUtil.insert(triple.getSubject().getURI(), dataset);
 						} catch (ClassNotFoundException e) {
@@ -211,27 +213,46 @@ public class DumpsXZBZ2 {
 		return ret;
 	}
 
-	private static Set<String> getFileNames() throws SocketException, IOException {
+	private static Set<String> getFileNames(List<String> pURLs) throws SocketException, IOException {
 		Set<String> ret = new HashSet<String>();
 
-		String domain = "ftp.uniprot.org";
-		String path = "/pub/databases/uniprot/current_release/rdf/";
-		FTPClient client = new FTPClient();
-		client.connect(domain);
-		client.enterLocalPassiveMode();
-		client.login("anonymous", "");
-		FTPFile[] files = client.listFiles(path);
-		for (FTPFile ftpFile : files) {
-			ret.add("ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/rdf/" + ftpFile.getName());
-		}
+		
 
-		String url = "http://downloads.dbpedia.org/2016-10/core-i18n/en/";
-		Document doc = Jsoup.connect(url).get();
-		for (Element file : doc.select("a")) {
-			String fName = file.attr("href");
-			if (fName.endsWith(".bz2"))
-				ret.add(fName);
-		}
+		pURLs.forEach(sURL -> {
+			if (sURL.startsWith("ftp")) {
+				try {
+					String s[] = sURL.split("/");
+					String domain = s[2];
+					String path = sURL.substring(sURL.indexOf(domain) + domain.length());
+
+					FTPClient client = new FTPClient();
+					client.connect(domain);
+					client.enterLocalPassiveMode();
+					client.login("anonymous", "");
+					FTPFile[] files = client.listFiles(path);
+					for (FTPFile ftpFile : files) {
+						//ret.add("ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/rdf/" + ftpFile.getName());
+						String fName = ftpFile.getName();
+						if(fName.endsWith(".xz"))
+							ret.add(sURL + fName);
+					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			} else {
+				//String url = "http://downloads.dbpedia.org/2016-10/core-i18n/en/";
+				try {
+					Document doc = Jsoup.connect(sURL).get();
+					for (Element file : doc.select("a")) {
+						String fName = file.attr("href");
+						if (fName.endsWith(".bz2"))
+							ret.add(fName);
+					}
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
 
 		return ret;
 	}
@@ -359,7 +380,7 @@ public class DumpsXZBZ2 {
 		String[] str = pURL.getFile().split("/");
 		return str[str.length - 1];
 	}
-	
+
 	public static String getURLFileName(String pURL) {
 		String[] str = pURL.split("/");
 		return str[str.length - 1];
