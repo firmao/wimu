@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,18 +37,36 @@ import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.Triple;
 import com.hp.hpl.jena.sparql.core.Quad;
 
-public class Dumps {
+public class DumpsThread {
 
 	public static Set<String> alreadyProcessed = new HashSet<String>();
 	public static Set<String> errorFiles = new HashSet<String>();
 	public static Set<String> successFiles = new HashSet<String>();
 	public static Set<String> setFileURLs = new HashSet<String>();
-	public static Map<String, String> datasetErrorsJena = new HashMap<String, String>();
-	public static int count = 0;
+	public static Map<String, String> datasetErrorsJena = new ConcurrentHashMap<String, String>();
+	public static Map<String, String> mDataTypes = new ConcurrentHashMap<String, String>();
+	public static long count = 0;
+	public static long totalTriples = 0;
+	public static long countDataType = 0;
+	public static long lim = 0;
+	public static long origLim = 0;
+	public static long start = 0;
+	public static long totalTime = 0;
+	public static boolean dbIndex = false;
 
 	public static void main(String args[]) throws IOException {
-		long start = System.currentTimeMillis();
-
+		start = System.currentTimeMillis();
+		
+		if(args.length > 0){
+			lim = Long.parseLong(args[0]);
+			origLim = lim;
+			if(args[1].length() > 0){
+				dbIndex = Boolean.parseBoolean(args[1]);
+			}
+		}
+		System.out.println("LIM = " + lim);
+		
+		
 		int cores = Runtime.getRuntime().availableProcessors();
 		List<String> lstURLDumps = FileUtils.readLines(new File("dumpsLocation.txt"), "UTF-8");
 		Set<String> setAllFileURLs = getFileURLs(lstURLDumps);
@@ -76,6 +95,7 @@ public class Dumps {
 			// One file for each processor thread.
 			System.out.println("Starting to process " + cores + " threads/files (PARALLEL). Already processed files: " 
 				+ alreadyProcessed.size() + " from " + setAllFileURLs.size());
+			
 			setFiles.parallelStream().forEach(file -> {
 			//for (FileWIMU file : setFiles) {
 				String provenance = file.getDataset();
@@ -86,13 +106,23 @@ public class Dumps {
 					System.out.println("FAIL: " + provenance + " ERROR: " + datasetErrorsJena.get(provenance));
 				}
 				alreadyProcessed.add(provenance);
-				// setAllFileURLs.removeAll(alreadyProcessed);
 			//}
 			});
 		}
-		long totalTime = System.currentTimeMillis() - start;
+		String errors = "";
+		System.out.println("Updatding the database...");
+		try {
+			long startUpdate = System.currentTimeMillis();
+			DBUtil.updateDB();
+			long timeUpdate = System.currentTimeMillis() - startUpdate;
+			System.out.println("DB updated in ." + timeUpdate + " milliseconds");
+			errors = "DB updated in ." + timeUpdate + " milliseconds - ";
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total Time(ms): " + totalTime);
-		String errors = "Files processed: " + setAllFileURLs.size() + "\n Total Time: " + totalTime + ""
+		errors += "Files processed: " + setAllFileURLs.size() + "\n Total Time: " + totalTime + ""
 				+ "\nNumberErrorFiles: " + datasetErrorsJena.size() + "\nNumberFilesSuccess: " + successFiles.size();
 		Email.sendEmail("firmao@gmail.com", "End pro DBindex process", errors);
 		generateFile(datasetErrorsJena, "ErrorsJena.csv");
@@ -104,9 +134,11 @@ public class Dumps {
 			FileWIMU fUnzip = null;
 			if (file.getName().endsWith(".bz2"))
 				fUnzip = new FileWIMU(file.getName().replaceAll(".bz2", ""));
-			else
+			else if (file.getName().endsWith(".xz"))
 				fUnzip = new FileWIMU(file.getName().replaceAll(".xz", ""));
-
+			else
+				return processUnzipRDF(file);
+				
 			fUnzip.setDataset(file.getDataset());
 			BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
 			FileOutputStream out = new FileOutputStream(fUnzip);
@@ -179,20 +211,51 @@ public class Dumps {
 
 				@Override
 				public void triple(Triple triple) {
-
 					// System.out.println(subject.getURI());
 					if (triple.getObject().isLiteral()) {
-						// System.out.println("<" + triple.getSubject().getURI()
-						// + "> <" + triple.getPredicate().getURI()
-						// + "> " + triple.getObject().toString() + " .");
-
-						try {
-							DBUtil.insert(triple.getSubject().getURI(), fUnzip.getDataset());
-						} catch (ClassNotFoundException e) {
-							e.printStackTrace();
-						} catch (SQLException e) {
-							e.printStackTrace();
+						countDataType++;
+						
+//						 System.out.println("<" + triple.getSubject().getURI()
+//						 + "> <" + triple.getPredicate().getURI()
+//						 + "> " + triple.getObject().toString() + " .");
+						if(dbIndex){
+							mDataTypes.put(triple.getSubject().getURI(), fUnzip.getDataset());
+//							try {
+//								DBUtil.insert(triple.getSubject().getURI(), fUnzip.getDataset());
+//							} catch (ClassNotFoundException e) {
+//								e.printStackTrace();
+//							} catch (SQLException e) {
+//								e.printStackTrace();
+//							}
 						}
+					}
+					totalTriples++;
+					//System.out.println(count2);
+					if(totalTriples > lim){
+						if(mDataTypes.size() > 0){
+							System.out.println("COMMIT each " + origLim + " Triples");
+							try{
+								DBUtil.insert(mDataTypes);
+								mDataTypes.clear();
+							}catch(Exception ex){
+								ex.printStackTrace();
+							}
+						}
+						lim += totalTriples;
+						System.out.println("new LIM = " + lim);
+						//DBUtil.setAutoCommit(true);
+//						System.out.println(" - FORCED FINISH !!!");
+//						totalTime = System.currentTimeMillis() - start;
+//						System.out.println("Total Time(ms): " + totalTime);
+//						System.out.println("triples: " + totalTriples);
+//						System.out.println("dataTypes: " + countDataType);
+//						System.out.println("DBIndex: " + dbIndex);
+//						System.out.println("HashMap size:" + mTest.size());
+//						fUnzip.delete();
+//						System.out.println("Generating file with dataTypes...");
+//						generateFile(mTest, "dataTypes.csv");
+//						System.out.println("File Generated.");
+//						System.exit(0);
 					}
 				}
 
@@ -262,7 +325,8 @@ public class Dumps {
 						// ret.add("ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/rdf/"
 						// + ftpFile.getName());
 						String fName = ftpFile.getName();
-						if (fName.endsWith(".xz"))
+						//if (fName.endsWith(".xz"))
+						if(filterFileType(fName))
 							ret.add(sURL + fName);
 					}
 				} catch (Exception ex) {
@@ -275,7 +339,8 @@ public class Dumps {
 					Document doc = Jsoup.connect(sURL).get();
 					for (Element file : doc.select("a")) {
 						String fName = file.attr("href");
-						if (fName.endsWith(".bz2"))
+						//if (fName.endsWith(".bz2"))
+						if(filterFileType(fName))
 							ret.add(sURL + fName);
 					}
 				} catch (Exception ex) {
@@ -284,6 +349,16 @@ public class Dumps {
 			}
 		});
 
+		return ret;
+	}
+
+	private static boolean filterFileType(String fName) {
+		boolean ret = false;
+			if(fName.endsWith(".ttl.bz2") || fName.endsWith(".tql.bz2")
+					|| fName.endsWith("rdf.xz") || fName.endsWith(".rdf")
+					|| fName.endsWith(".ttl") || fName.endsWith(".tql") 
+					|| fName.endsWith(".nquad"))
+				ret = true;
 		return ret;
 	}
 
@@ -313,7 +388,7 @@ public class Dumps {
 					}
 				}
 
-				pool.submit(new MyTask(line));
+				//pool.submit(new MyTask(line));
 				count++;
 			}
 			// note that Scanner suppresses exceptions
@@ -331,25 +406,23 @@ public class Dumps {
 	}
 
 	static class MyTask implements Runnable {
-		private String lLine;
+		private FileWIMU file;
 
-		public MyTask(String line) {
-			this.lLine = line;
+		public MyTask(FileWIMU pFile) {
+			this.file = pFile;
 
 		}
 
 		public void run() {
-			// System.out.println(lLine);
-			String[] triple = lLine.split(",");
-			String s = triple[0];
-			String o = triple[2];
-			if (!o.startsWith("http")) {
-				// System.out.println("Literal");
-				System.out.println(lLine);
-				// setDataType.add(lLine);
+			//process file
+			String provenance = file.getDataset();
+			if (processCompressedFile(file, provenance)) {
+				successFiles.add(provenance);
+				System.out.println("SUCESS: " + provenance);
 			} else {
-				System.out.println("<not yet>");
+				System.out.println("FAIL: " + provenance + " ERROR: " + datasetErrorsJena.get(provenance));
 			}
+			alreadyProcessed.add(provenance);
 		}
 	}
 
