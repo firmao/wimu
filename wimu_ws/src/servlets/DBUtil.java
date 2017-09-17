@@ -53,6 +53,47 @@ public class DBUtil {
 				lgr.log(Level.WARNING, ex.getMessage(), ex);
 			}
 		}
+		Map<String, Integer> mDumps = findDumps(uri);
+		result.putAll(mDumps);
+		return result;
+	}
+
+	private static Map<String, Integer> findDumps(String uri) {
+		Map<String, Integer> result = new HashMap<String, Integer>();
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		try {
+			Connection connection = getSQLConnection();
+			ps = connection.prepareStatement(
+					"Select count(o) as dTypes, o from datatypes where s = ? group by o");
+			ps.setString(1, uri);
+			rs = ps.executeQuery();
+			while (rs.next()) {
+				String endPoint = rs.getString("o");
+				int countDType = rs.getInt("dTypes");
+				result.put(endPoint, countDType);
+			}
+		} catch (Exception ex) {
+			Logger lgr = Logger.getLogger(DBUtil.class.getName());
+			lgr.log(Level.SEVERE, ex.getMessage(), ex);
+
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+				if (ps != null) {
+					ps.close();
+				}
+				// if (conn != null) {
+				// conn.close();
+				// }
+
+			} catch (SQLException ex) {
+				Logger lgr = Logger.getLogger(DBUtil.class.getName());
+				lgr.log(Level.WARNING, ex.getMessage(), ex);
+			}
+		}
 		return result;
 	}
 
