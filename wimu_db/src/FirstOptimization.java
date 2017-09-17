@@ -27,7 +27,7 @@ public class FirstOptimization {
 		System.out.println("Starting get good EndPointsHTML");
 		long start = System.currentTimeMillis();
 		Set<String> endPointsGoodHTML = QueryEndPoints.getGoodEndPoints();
-		//Set<String> endPointsGoodHTML = Files.lines(Paths.get("GoodEndPoints_3.txt")).collect(Collectors.toSet());
+		//Set<String> endPointsGoodHTML = Files.lines(Paths.get("uniprot.txt")).collect(Collectors.toSet());
 		long totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total time (endPointsGoodHTML): " + totalTime);
 		System.out.println("Number of endPointsGoodHTML: " + endPointsGoodHTML.size());
@@ -90,6 +90,11 @@ public class FirstOptimization {
 		
 		generateFile(endPointsFailBruteForce, "FailBruteForceEndPoints.csv");
 		generateFile(endPointsFailRedirect, "FailRedirectEndPoints.csv");
+		
+		System.out.println("Starting manage dumps");
+		long lim = 1000000000l;
+		Dumps.executeDumps(lim, true);
+		System.out.println("Finished dumps.");
 	}
 
 	private static Map<String, String> createDBIndex(Set<String> setEndPoints) throws ClassNotFoundException, SQLException {
@@ -147,11 +152,11 @@ public class FirstOptimization {
 				"Number of selected Datasets(endpoints with dataTypes): " + getSelectedEndPoints(mSubjEndPoint));
 		System.out.println("Number of endPoints (Still some error): " + mEndPointError.size());
 		generateFile(mEndPointError, "EndPointErrors.csv");
-//		Email.sendEmail("firmao@gmail.com", "LinkLion part1 finished", "Total time: " + totalTime + "\n"
-//				+ "Number of Subjects with Objects as DataType: " + mSubjCount.size() + "\n"
-//				+ "Number of selected Datasets(endpoints with dataTypes): " + getSelectedEndPoints(mSubjEndPoint) + "\n"
-//				+ "Number of endPoints (Still some error): " + mEndPointError.size() + "\n"
-//				+ "Number of endPoints: " + setEndPoints.size());
+		Email.sendEmail("firmao@gmail.com", "LinkLion part1 finished", "Total time: " + totalTime + "\n"
+				+ "Number of Subjects with Objects as DataType: " + mSubjCount.size() + "\n"
+				+ "Number of selected Datasets(endpoints with dataTypes): " + getSelectedEndPoints(mSubjEndPoint) + "\n"
+				+ "Number of endPoints (Still some error): " + mEndPointError.size() + "\n"
+				+ "Number of endPoints: " + setEndPoints.size());
 		return mEndPointError;
 	}
 	
