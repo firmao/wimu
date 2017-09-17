@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,30 +18,34 @@ import javax.naming.Context;
 public class DBUtil {
 	static Connection connGeneric;
 	static Map<String, Integer> mDatasetIndex = new HashMap<String, Integer>();
-	public static Connection getConnection() throws ClassNotFoundException, SQLException
-	{
-//		ctx = new InitialContext();
-//
-//		DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/mysql");
-//
-//		if (ds != null) return ds.getConnection();
-		
+
+	public static Connection getConnection() throws ClassNotFoundException, SQLException {
+		// ctx = new InitialContext();
+		//
+		// DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/mysql");
+		//
+		// if (ds != null) return ds.getConnection();
+
 		Class.forName("com.mysql.jdbc.Driver");
-		//return DriverManager.getConnection("jdbc:mysql://db4free.net/dbsameas?" +
-        //        "user=firmao&password=sameas");
-        //return DriverManager.getConnection("jdbc:mysql://127.0.0.1/linklion2?" +
-        //                "user=root&password=sameas");        
-        if(connGeneric != null)
-        	return connGeneric;
-        else{
-        	//connGeneric = DriverManager.getConnection("jdbc:mysql://139.18.8.63/linklion2?" +
-            //       "user=root&password=sameas");
-        	connGeneric = DriverManager.getConnection("jdbc:mysql://127.0.0.1/linklion2?" +
-                    "user=root&password=sameas");
-        	return connGeneric;
-        }
+		// return
+		// DriverManager.getConnection("jdbc:mysql://db4free.net/dbsameas?" +
+		// "user=firmao&password=sameas");
+		// return
+		// DriverManager.getConnection("jdbc:mysql://127.0.0.1/linklion2?" +
+		// "user=root&password=sameas");
+		if (connGeneric != null)
+			return connGeneric;
+		else {
+			// connGeneric =
+			// DriverManager.getConnection("jdbc:mysql://139.18.8.63/linklion2?"
+			// +
+			// "user=root&password=sameas");
+			connGeneric = DriverManager
+					.getConnection("jdbc:mysql://127.0.0.1/linklion2?" + "user=root&password=sameas");
+			return connGeneric;
+		}
 	}
-	
+
 	public static void setAutoCommit(boolean value) {
 		try {
 			getConnection().setAutoCommit(value);
@@ -52,44 +57,48 @@ public class DBUtil {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/*
-	 * Table Dataset(int index, string Name)
-	 * Table URI(int index, string uri, int indDataset)
+	 * Table Dataset(int index, string Name) Table URI(int index, string uri,
+	 * int indDataset)
+	 * 
 	 * @DataSetName = Name of the EndPoint
 	 */
-	public static void insert(String dataSetName, String subjURI, Integer count) throws ClassNotFoundException, SQLException{
-//		Connection conn = null;
-//		Context ctx;
-//		try {
-//			conn = getConnection();
-//			int indDataSet =  0;
-//			if (mDatasetIndex.containsKey(dataSetName)){
-//				indDataSet = mDatasetIndex.get(dataSetName);
-//			}else{
-//				indDataSet = getLastIndex(conn, "dataset2", "indDS") + 1;
-//				
-//				PreparedStatement prep = conn
-//						.prepareStatement("INSERT INTO linklion2.dataset2 (indDS, name) VALUES (?,?);");
-//				prep.setInt(1, indDataSet);
-//				prep.setString(2, dataSetName.trim());
-//	
-//				prep.executeUpdate();
-//				mDatasetIndex.put(dataSetName, indDataSet);
-//			}
-//			int indURI = getLastIndex(conn, "uri2", "indURI") + 1;
-//			PreparedStatement prep2 = conn
-//					.prepareStatement("INSERT INTO linklion2.uri2 (indURI, uri, indexDataset, countDType) VALUES (?, ?, ?, ?);");
-//			prep2.setInt(1, indURI);
-//			prep2.setString(2, subjURI.trim());
-//			prep2.setInt(3, indDataSet);
-//			prep2.setInt(4, count);
-//
-//			prep2.executeUpdate();
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+	public static void insert(String dataSetName, String subjURI, Integer count)
+			throws ClassNotFoundException, SQLException {
+		// Connection conn = null;
+		// Context ctx;
+		// try {
+		// conn = getConnection();
+		// int indDataSet = 0;
+		// if (mDatasetIndex.containsKey(dataSetName)){
+		// indDataSet = mDatasetIndex.get(dataSetName);
+		// }else{
+		// indDataSet = getLastIndex(conn, "dataset2", "indDS") + 1;
+		//
+		// PreparedStatement prep = conn
+		// .prepareStatement("INSERT INTO linklion2.dataset2 (indDS, name)
+		// VALUES (?,?);");
+		// prep.setInt(1, indDataSet);
+		// prep.setString(2, dataSetName.trim());
+		//
+		// prep.executeUpdate();
+		// mDatasetIndex.put(dataSetName, indDataSet);
+		// }
+		// int indURI = getLastIndex(conn, "uri2", "indURI") + 1;
+		// PreparedStatement prep2 = conn
+		// .prepareStatement("INSERT INTO linklion2.uri2 (indURI, uri,
+		// indexDataset, countDType) VALUES (?, ?, ?, ?);");
+		// prep2.setInt(1, indURI);
+		// prep2.setString(2, subjURI.trim());
+		// prep2.setInt(3, indDataSet);
+		// prep2.setInt(4, count);
+		//
+		// prep2.executeUpdate();
+		// } catch (Exception e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 		Connection dbConnection = getConnection();
 		CallableStatement callableStatement = null;
 
@@ -122,7 +131,7 @@ public class DBUtil {
 		CallableStatement callableStatement = null;
 
 		String insertStoreProc = "{call ADD_DB(?,?)}";
-		//String insertStoreProc = "{call ADD_DB_OLD(?,?)}";
+		// String insertStoreProc = "{call ADD_DB_OLD(?,?)}";
 
 		try {
 			callableStatement = dbConnection.prepareCall(insertStoreProc);
@@ -145,7 +154,37 @@ public class DBUtil {
 		}
 
 	}
-	
+
+	public static void insertUniprot(String s, String p, String o) throws ClassNotFoundException, SQLException {
+		Connection dbConnection = getConnection();
+		CallableStatement callableStatement = null;
+
+		String insertStoreProc = "{call ADD_U(?,?,?)}";
+		// String insertStoreProc = "{call ADD_DB_OLD(?,?)}";
+
+		try {
+			callableStatement = dbConnection.prepareCall(insertStoreProc);
+
+			callableStatement.setString(1, s);
+			callableStatement.setString(2, p);
+			callableStatement.setString(3, o);
+
+			callableStatement.executeUpdate();
+
+		} catch (SQLException e) {
+
+			System.err.println(e.getMessage());
+
+		} finally {
+
+			if (callableStatement != null) {
+				callableStatement.close();
+			}
+
+		}
+
+	}
+
 	private static int getLastIndex(Connection conn, String table, String sNameInd) {
 		int iRet = 0;
 		Statement st = null;
@@ -153,7 +192,7 @@ public class DBUtil {
 
 		try {
 			st = conn.createStatement();
-			String sQuery = "Select MAX("+sNameInd+") as ind from linklion2." + table + ";";
+			String sQuery = "Select MAX(" + sNameInd + ") as ind from linklion2." + table + ";";
 			rs = st.executeQuery(sQuery);
 			while (rs.next()) {
 				iRet = rs.getInt(1);
@@ -171,9 +210,9 @@ public class DBUtil {
 				if (st != null) {
 					st.close();
 				}
-				//if (conn != null) {
-				//	conn.close();
-				//}
+				// if (conn != null) {
+				// conn.close();
+				// }
 
 			} catch (SQLException ex) {
 				Logger lgr = Logger.getLogger(DBUtil.class.getName());
@@ -183,9 +222,50 @@ public class DBUtil {
 
 		return iRet;
 	}
-	
-	public static void main(String args[]) throws ClassNotFoundException, SQLException{
+
+	public static void main(String args[]) throws ClassNotFoundException, SQLException {
 		insert("DatasetTest", "http://fdsa.rew.fds", 3);
 	}
-	
+
+	public static void insert(Map<String, String> mDataTypes) {
+		try {
+			getConnection().setAutoCommit(false);
+			PreparedStatement prep = getConnection().prepareStatement("INSERT INTO linklion2.datatypes (s,o) VALUES (?,?);");
+			mDataTypes.forEach((dataset, subject) -> {
+				try {
+					prep.setString(1,dataset);
+					prep.setString(2,subject);
+					prep.executeUpdate();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			});
+			getConnection().commit();
+		} catch (Exception e) {
+
+		}
+	}
+
+	public static void updateDB() throws SQLException, ClassNotFoundException {
+		Connection dbConnection = getConnection();
+		CallableStatement callableStatement = null;
+
+		String insertStoreProc = "{call updataData()}";
+
+		try {
+			callableStatement = dbConnection.prepareCall(insertStoreProc);
+			callableStatement.executeUpdate();
+		} catch (SQLException e) {
+
+			System.err.println(e.getMessage());
+
+		} finally {
+
+			if (callableStatement != null) {
+				callableStatement.close();
+			}
+
+		}
+	}
+
 }
