@@ -25,7 +25,7 @@ We finally show use-cases of applications that can immediately benefit from our 
 Create the structure of the database inside MySql:
 https://github.com/dice-group/wimu/blob/master/DB_Tables_StoredProcedure.sql
 
-Donwload the Database index from: https://doi.org/10.6084/m9.figshare.5005241.v1
+Donwload the Database index from: https://doi.org/10.6084/m9.figshare.5435971
 and import into the Database linklion2, with the command:
 
 <pre>
