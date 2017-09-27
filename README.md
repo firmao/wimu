@@ -67,6 +67,10 @@ Output(JSON):
 [{"EndPoint":"http://biordf.net/sparql","CDataType":"1"},{"EndPoint":"http://lov.okfn.org/dataset/lov/sparql","CDataType":"4"}]
 
 </pre>
+## Demonstration via website:
+
+http://139.18.8.58:8080/LinkLion2_WServ/
+
 
 You can also clone the whole repository in which will include both projects (Database index creation and the webservice).
 
