@@ -103,4 +103,4 @@ This research has been partially supported by CNPq Brazil under grants No. 20153
 
 # License
 
-licensed under Apache 2.0
+licensed under AGPL 2.0
