@@ -72,8 +72,8 @@ public class Dump2Lucene {
 	public static ConcurrentHashMap<String, String> datasetErrorsJena = new ConcurrentHashMap<String, String>();
 	public static ConcurrentHashMap<String, Integer> mDatatypeTriples = new ConcurrentHashMap<String, Integer>();
 	public static Set<String> setDataTypes = new HashSet<String>();
-	
-	//Lucene
+
+	// Lucene
 	public static final String N_TRIPLES = "NTriples";
 	public static final String TTL = "ttl";
 	public static final String TSV = "tsv";
@@ -83,81 +83,98 @@ public class Dump2Lucene {
 	private static IndexSearcher isearcher;
 	private static IndexWriter iwriter;
 	private static MMapDirectory directory;
-	
+
 	public static long count = 0;
 	public static long countDataTypeTriples = 0;
 	public static long totalTriples = 0;
 	public static long countFile = 0;
 	public static long lim = 10000000;
-  //public static long lim = 100000;
+	// public static long lim = 100000;
 	public static long origLim = 0;
 	public static long start = 0;
 	public static long totalTime = 0;
 	public static String fDatypeName = null;
 	public static Dataset datasetJena = null;
-	
+
 	public static void main(String args[]) throws IOException, ClassNotFoundException, SQLException, ParseException {
-		
+
 		LogCtl.setLog4j("log4j.properties");
 		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
 
-		if(args.length > 1){
-			if(args[0].equals("search")){
-				int maxResults = Integer.parseInt(args[2]); 
-				luceneSearch(args[1], maxResults);
+		if (args.length > 1) {
+			if (args[0].equals("search")) {
+				int maxResults = Integer.parseInt(args[2]);
+				Set<String> dirs = new HashSet<String>();
+				dirs.add("indexLuceneDir");
+				dirs.add("ind1");
+				dirs.add("ind2");
+				Map<String, Integer> mLucene = luceneSearch(args[1], maxResults, dirs);
+				mLucene.forEach((ds, dTypes) -> {
+					System.out.println(args[1] + "\t" + ds + "\t" + dTypes);
+				});
+				System.exit(0);
 			}
 		}
-		
+
 		File f = new File("out");
-		if(!f.exists()) f.mkdir();
-		
+		if (!f.exists())
+			f.mkdir();
+
 		File f1 = new File("dumps");
-		if(!f1.exists()) f1.mkdir();
-		
+		if (!f1.exists())
+			f1.mkdir();
+
 		File f2 = new File("unzip");
-		if(!f2.exists()) f2.mkdir();
-		 
+		if (!f2.exists())
+			f2.mkdir();
+
 		execMain(args);
 	}
 
-	private static void luceneSearch(String uri, int maxResults) throws IOException, ParseException {
-		File indexDirectory = new File("indexLuceneDir");
-		directory = new MMapDirectory(indexDirectory);
-		ireader = DirectoryReader.open(directory);
-		isearcher = new IndexSearcher(ireader);
-		BooleanQuery bq = new BooleanQuery();
-		Query q = new TermQuery(new Term("uri", uri.trim()));
-		bq.add(q, BooleanClause.Occur.MUST);
-		TopScoreDocCollector collector = TopScoreDocCollector.create(maxResults, true);
-		isearcher.search(bq, collector);
-		ScoreDoc[] hits = collector.topDocs().scoreDocs;
-		Map<String, Integer> mResults = new HashMap<String, Integer>();
-		for (int i = 0; i < hits.length; i++) {
-			Document hitDoc = isearcher.doc(hits[i].doc);
-			String s[] = hitDoc.get("dataset_dtype").split("\t");
-			String dataset = s[0];
-			String dtype = s[1];
-			if(mResults.containsKey(dataset)){
-				int dtypes = mResults.get(dataset);
-				mResults.put(dataset, dtypes + Integer.parseInt(dtype));
-			}else{
-				mResults.put(dataset, Integer.parseInt(dtype));
+	public static Map<String, Integer> luceneSearch(String uri, int maxResults, Set<String> dirs)
+			throws IOException, ParseException {
+		ConcurrentHashMap<String, Integer> mResults = new ConcurrentHashMap<String, Integer>();
+		dirs.parallelStream().forEach(dir -> {
+			try {
+				System.out.println(dir);
+				File indexDirectory = new File(dir);
+				// File indexDirectory = new File("indexLuceneDir");
+				directory = new MMapDirectory(indexDirectory);
+				ireader = DirectoryReader.open(directory);
+				isearcher = new IndexSearcher(ireader);
+				BooleanQuery bq = new BooleanQuery();
+				Query q = new TermQuery(new Term("uri", uri.trim()));
+				bq.add(q, BooleanClause.Occur.MUST);
+				TopScoreDocCollector collector = TopScoreDocCollector.create(maxResults, true);
+				isearcher.search(bq, collector);
+				ScoreDoc[] hits = collector.topDocs().scoreDocs;
+
+				for (int i = 0; i < hits.length; i++) {
+					Document hitDoc = isearcher.doc(hits[i].doc);
+					String s[] = hitDoc.get("dataset_dtype").split("\t");
+					String dataset = s[0];
+					String dtype = s[1];
+					if (mResults.containsKey(dataset)) {
+						int dtypes = mResults.get(dataset);
+						mResults.put(dataset, dtypes + Integer.parseInt(dtype));
+					} else {
+						mResults.put(dataset, Integer.parseInt(dtype));
+					}
+				}
+				mResults.forEach((ds, dTypes) -> {
+					System.out.println(ds + "\t" + dTypes);
+				});
+				if (ireader != null) {
+					ireader.close();
+				}
+				if (directory != null) {
+					directory.close();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-			System.out.println(i + "\t" + uri + "\t" + hitDoc.get("dataset_dtype"));
-		}
-		
-		System.out.println("-------------");
-		mResults.forEach((ds, dTypes) -> {
-			System.out.println(uri + "\t"+ ds + "\t" + dTypes);
 		});
-		
-		if (ireader != null) {
-			ireader.close();
-		}
-		if (directory != null) {
-			directory.close();
-		}
-		System.exit(0);
+		return mResults;
 	}
 
 	public static void execMain(String args[]) throws IOException, ClassNotFoundException, SQLException {
@@ -172,22 +189,21 @@ public class Dump2Lucene {
 		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
 		iwriter = new IndexWriter(directory, config);
 		iwriter.commit();
-		
-		
+
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
 		System.out.println("Dump2Lucene...Parallel, starting: " + dateFormat.format(date));
 		start = System.currentTimeMillis();
-		
+
 		int cores = Runtime.getRuntime().availableProcessors();
 		List<String> lstURLDumps = FileUtils.readLines(new File("dumpsLocation.txt"), "UTF-8");
 		Set<String> setAllFileURLs = getFileURLs(lstURLDumps);
-		
+
 		if (args.length == 1)
 			System.out.println("only Dumps from: " + lstURLDumps);
 		else
 			setAllFileURLs.addAll(getDumps("lodStatsDatasets.txt"));
-			
+
 		setFileURLs.addAll(setAllFileURLs);
 		// setAllFileServer.forEach(fileName -> {
 		for (String fileURL : setAllFileURLs) {
@@ -213,11 +229,11 @@ public class Dump2Lucene {
 			}
 			System.out.println("Starting to process " + cores + " threads/files. Already processed files: "
 					+ alreadyProcessed.size() + " from " + setAllFileURLs.size());
-			
+
 			long tProcess = System.currentTimeMillis();
 			System.out.println("Parallel processing");
 			setFiles.parallelStream().forEach(file -> {
-			//for (FileWIMU file : setFiles) {
+				// for (FileWIMU file : setFiles) {
 				String provenance = file.getDataset();
 				if (processCompressedFile(file, provenance)) {
 					successFiles.add(provenance);
@@ -225,12 +241,12 @@ public class Dump2Lucene {
 				} else {
 					System.out.println("FAIL: " + provenance + " ERROR: " + datasetErrorsJena.get(provenance));
 				}
-				
+
 				alreadyProcessed.add(provenance);
-			//}
+				// }
 			});
 			long totalTProcess = System.currentTimeMillis() - tProcess;
-			System.out.println("Total TimeProcess("+cores+" files): " + totalTProcess);
+			System.out.println("Total TimeProcess(" + cores + " files): " + totalTProcess);
 			System.out.println("mDatatypes.size: " + mDatatypeTriples.size());
 		}
 		System.out.println("Inserting remaining " + mDatatypeTriples.size() + " Datatypes");
@@ -260,19 +276,19 @@ public class Dump2Lucene {
 				Document doc = new Document();
 				doc.add(new StringField("uri", uri, Store.YES));
 				doc.add(new StringField("dataset_dtype", dataset + "\t" + dTypes, Store.YES));
-				iwriter.addDocument(doc);			
+				iwriter.addDocument(doc);
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		});
-		//iwriter.close();
+		// iwriter.close();
 	}
-	
+
 	private static Set<String> getDumps(String fileName) throws IOException {
 		Set<String> setDumps = Files.lines(Paths.get(fileName)).collect(Collectors.toSet());
 		Set<String> ret = new HashSet<String>();
 		for (String dump : setDumps) {
-			if((dump.length() > 10) && (!dump.contains("sparql")) && (!dump.endsWith("/"))){
+			if ((dump.length() > 10) && (!dump.contains("sparql")) && (!dump.endsWith("/"))) {
 				ret.add(dump);
 			}
 		}
@@ -373,7 +389,7 @@ public class Dump2Lucene {
 							mDatatypeTriples.put(uriDataset, 1);
 						}
 
-						if(mDatatypeTriples.size() > lim){
+						if (mDatatypeTriples.size() > lim) {
 							long startTime = System.currentTimeMillis();
 							System.out.println("Reach the limit: " + lim + " Inserting to DB.");
 							try {
@@ -383,10 +399,11 @@ public class Dump2Lucene {
 								e.printStackTrace();
 							}
 							long totalT = System.currentTimeMillis() - startTime;
-							System.out.println("Insert Lucene "+ countDataTypeTriples +" DataTypeTriples, in totalTime: " + totalT);
+							System.out.println("Insert Lucene " + countDataTypeTriples
+									+ " DataTypeTriples, in totalTime: " + totalT);
 							System.out.println("countDataTypeTriples: " + countDataTypeTriples);
 							System.out.println("totalTriples: " + totalTriples);
-							
+
 							mDatatypeTriples.clear();
 							mDatatypeTriples = new ConcurrentHashMap<String, Integer>();
 						}
@@ -408,7 +425,7 @@ public class Dump2Lucene {
 		}
 		return ret;
 	}
-	
+
 	private static Set<FileWIMU> getFiles(int cores, Set<String> setFileServer) throws IOException {
 		Set<FileWIMU> ret = new HashSet<FileWIMU>();
 		count = 0;
@@ -417,7 +434,7 @@ public class Dump2Lucene {
 		// for (String sFileURL : setFileServer) {
 		System.out.println("Download parallel");
 		setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
-		//setFileServer.stream().limit(cores).forEach(sFileURL -> {
+			// setFileServer.stream().limit(cores).forEach(sFileURL -> {
 			try {
 				String sFileName = getURLFileName(sFileURL);
 				FileWIMU fRet = new FileWIMU("dumps/" + sFileName);
@@ -429,7 +446,7 @@ public class Dump2Lucene {
 				System.out.println(count + " : " + sFileURL);
 			} catch (Exception ex) {
 				datasetErrorsJena.put(sFileURL, ex.getMessage());
-				//ex.printStackTrace();
+				// ex.printStackTrace();
 			}
 			// }
 		});
@@ -497,7 +514,7 @@ public class Dump2Lucene {
 		try {
 			PrintWriter writer = new PrintWriter(fileName, "UTF-8");
 			maps.forEach((uriDataset, dTypes) -> {
-				writer.println(uriDataset + " \""+dTypes+"\"^^<http://www.w3.org/2001/XMLSchema#int> .");
+				writer.println(uriDataset + " \"" + dTypes + "\"^^<http://www.w3.org/2001/XMLSchema#int> .");
 			});
 			writer.close();
 		} catch (Exception e) {
@@ -520,7 +537,7 @@ public class Dump2Lucene {
 
 		return ret;
 	}
-	
+
 	public static String getURLFileName(URL pURL) {
 		String[] str = pURL.getFile().split("/");
 		return str[str.length - 1];
