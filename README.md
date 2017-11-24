@@ -21,14 +21,14 @@ We finally show use-cases of applications that can immediately benefit from our 
 # Build instructions:
 
 ## Apache Lucene index
-<pre>
+
 java -jar wimu.jar search <URI> <MAX_RESULTS_LUCENE> <LUCENE_INDEX_DIR>
 java -jar wimu.jar searcg <URI> <MAX_RESULTS_LUCENE> <LUCENE_INDEX_DIR> <optional-LUCENE_INDEX_DIR_1,...,LUCENE_INDEX_DIR_N>
 
 java -jar wimu.jar create <DUMP_DIR> <LUCENE_NAME_DIR> <dbpedia>
 java -jar wimu.jar create <DUMP_DIR> <LUCENE_NAME_DIR> <lodstats>
 java -jar wimu.jar create <DUMP_DIR> <LUCENE_NAME_DIR> <endpoints>
-</pre>  
+  
 
 ## In video:
 https://youtu.be/13cwc_UwfPc
