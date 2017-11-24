@@ -16,40 +16,19 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 -`Tomcat 6`. 
 
--`MySQL (latest version) and the Java driver to access the database`.
+- `Apache Lucene 4.4`.
 
 # Build instructions:
 
-## Database index (creating locally):
-
-Create the structure of the database inside MySql:
-https://github.com/dice-group/wimu/blob/master/DB_Tables_StoredProcedure.sql
-
-Donwload the Database index from: https://doi.org/10.6084/m9.figshare.5435971
-and import into the Database linklion2, with the command:
-
+## Apache Lucene index
 <pre>
-mysql -u root -p linklion2 < backup_linklion2_final3.sql
-</pre>
+java -jar wimu.jar search <URI> <MAX_RESULTS_LUCENE> <LUCENE_INDEX_DIR>
+java -jar wimu.jar searcg <URI> <MAX_RESULTS_LUCENE> <LUCENE_INDEX_DIR> <optional-LUCENE_INDEX_DIR_1,...,LUCENE_INDEX_DIR_N>
 
-- `DataBase type`: MySQL
-
-- `DataBase name`: linklion2
-
-- `username`: root
-
-- `password`: sameas
-
-Backup Database:
-<pre>
-mysqldump -u root -p linklion2 > BackupFile.sql
-</pre>
-
-## In video:
-https://youtu.be/oPGxZJvDSSw
-
-If you wanna to create your own Database index of URIs from LODStats (takes around 3 days with a 64 cores machine) using the following class:
-https://github.com/dice-group/wimu/blob/master/wimu_db/src/FirstOptimization.java
+java -jar wimu.jar create <DUMP_DIR> <LUCENE_NAME_DIR> <dbpedia>
+java -jar wimu.jar create <DUMP_DIR> <LUCENE_NAME_DIR> <lodstats>
+java -jar wimu.jar create <DUMP_DIR> <LUCENE_NAME_DIR> <endpoints>
+</pre>  
 
 ## In video:
 https://youtu.be/13cwc_UwfPc
