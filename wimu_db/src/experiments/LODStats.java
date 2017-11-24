@@ -3,7 +3,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.SocketException;
 import java.net.URL;
@@ -20,7 +19,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
@@ -37,12 +35,11 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.Field.Store;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.util.Version;
 import org.jsoup.Jsoup;
@@ -65,7 +62,6 @@ public class LODStats {
 	public static final Version LUCENE_VERSION = Version.LUCENE_44;
 	private static Analyzer urlAnalyzer;
 	private static DirectoryReader ireader;
-	private static IndexSearcher isearcher;
 	private static IndexWriter iwriter;
 	private static MMapDirectory directory;
 
@@ -73,7 +69,7 @@ public class LODStats {
 	public static long countDataTypeTriples = 0;
 	public static long totalTriples = 0;
 	public static long countFile = 0;
-	public static long lim = 10000000;
+	public static long lim = 30000000;
 	// public static long lim = 100000;
 	public static long origLim = 0;
 	public static long start = 0;
@@ -153,9 +149,9 @@ public class LODStats {
 					+ alreadyProcessed.size() + " from " + setAllFileURLs.size());
 
 			long tProcess = System.currentTimeMillis();
-			System.out.println("Parallel processing");
-			//setFiles.parallelStream().forEach(file -> {
-			for (FileWIMU file : setFiles) {
+			System.out.println("Parallel processing##");
+			setFiles.parallelStream().forEach(file -> {
+			//for (FileWIMU file : setFiles) {
 				String provenance = file.getDataset();
 				if (processCompressedFile(file, provenance)) {
 					successFiles.add(provenance);
@@ -165,8 +161,8 @@ public class LODStats {
 				}
 
 				alreadyProcessed.add(provenance);
-			}
-			//});
+			//}
+			});
 			long totalTProcess = System.currentTimeMillis() - tProcess;
 			System.out.println("Total TimeProcess(" + cores + " files): " + totalTProcess);
 			System.out.println("mDatatypes.size: " + mDatatypeTriples.size());
@@ -178,6 +174,27 @@ public class LODStats {
 		System.out.println("Total Time(ms): " + totalTime);
 		System.out.println("countDataTypeTriples: " + countDataTypeTriples);
 		date = new Date();
+		System.out.println("Dump2Lucene...Parallel, finalize at: " + dateFormat.format(date));
+		if (iwriter != null) {
+			iwriter.close();
+		}
+		if (ireader != null) {
+			ireader.close();
+		}
+		if (directory != null) {
+			directory.close();
+		}
+	}
+	
+	private static void exitBefore() throws IOException{
+		System.out.println("##################### EXIT BEFORE, just testing\nInserting remaining " + mDatatypeTriples.size() + " Datatypes");
+		insertLucene(mDatatypeTriples);
+		generateFile(datasetErrorsJena, "ErrorsJena.csv", true);
+		totalTime = System.currentTimeMillis() - start;
+		System.out.println("Total Time(ms): " + totalTime);
+		System.out.println("countDataTypeTriples: " + countDataTypeTriples);
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
 		System.out.println("Dump2Lucene...Parallel, finalize at: " + dateFormat.format(date));
 		if (iwriter != null) {
 			iwriter.close();
@@ -380,9 +397,10 @@ public class LODStats {
 		count = 0;
 		// setAllFileNames.removeAll(alreadyProcessed);
 		// setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
-		// for (String sFileURL : setFileServer) {
-		System.out.println("Download parallel");
-		setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
+		System.out.println("Download Files_");
+		for (String sFileURL : setFileServer) {
+			if(count == cores) break;
+		//setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
 		//setFileServer.stream().limit(cores).forEach(sFileURL -> {
 			try {
 				String sFileName = getURLFileName(sFileURL);
@@ -397,8 +415,8 @@ public class LODStats {
 				datasetErrorsJena.put(sFileURL, ex.getMessage());
 				// ex.printStackTrace();
 			}
-			// }
-		});
+		}
+		//});
 		return ret;
 	}
 

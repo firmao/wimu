@@ -166,6 +166,7 @@ public class DBpedia {
 			long totalTProcess = System.currentTimeMillis() - tProcess;
 			System.out.println("Total TimeProcess(" + cores + " files): " + totalTProcess);
 			System.out.println("mDatatypes.size: " + mDatatypeTriples.size());
+			//exitBefore();
 		}
 		System.out.println("Inserting remaining " + mDatatypeTriples.size() + " Datatypes");
 		insertLucene(mDatatypeTriples);
@@ -186,6 +187,27 @@ public class DBpedia {
 		}
 	}
 
+	private static void exitBefore() throws IOException{
+		System.out.println("##################### EXIT BEFORE, just testing\nInserting remaining " + mDatatypeTriples.size() + " Datatypes");
+		insertLucene(mDatatypeTriples);
+		generateFile(datasetErrorsJena, "ErrorsJena.csv", true);
+		totalTime = System.currentTimeMillis() - start;
+		System.out.println("Total Time(ms): " + totalTime);
+		System.out.println("countDataTypeTriples: " + countDataTypeTriples);
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		System.out.println("Dump2Lucene...Parallel, finalize at: " + dateFormat.format(date));
+		if (iwriter != null) {
+			iwriter.close();
+		}
+		if (ireader != null) {
+			ireader.close();
+		}
+		if (directory != null) {
+			directory.close();
+		}
+	}
+	
 	private static void insertLucene(ConcurrentHashMap<String, Integer> mDatatypeTriples2) throws IOException {
 		mDatatypeTriples2.forEach((uriDs, dTypes) -> {
 			String s[] = uriDs.split("\t");
