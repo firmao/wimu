@@ -20,15 +20,8 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.MMapDirectory;
-import org.apache.lucene.util.Version;
 
 public class Wimu {
-	// Lucene
-	public static final Version LUCENE_VERSION = Version.LUCENE_44;
-	private static DirectoryReader ireader;
-	private static IndexSearcher isearcher;
-	private static MMapDirectory directory;
-
 	public static long count = 0;
 	public static long countDataTypeTriples = 0;
 	public static long totalTriples = 0;
@@ -65,7 +58,7 @@ public class Wimu {
 				}
 				Map<String, Integer> mLucene = luceneSearch(args[1], maxResults, dirs);
 				mLucene.forEach((ds, dTypes) -> {
-					System.out.println(args[1] + "\t" + ds + "\t" + dTypes);
+					System.out.println(ds + "\t" + dTypes);
 				});
 			} else if (args[0].equals("create")) {
 				execMain(args);
@@ -81,9 +74,9 @@ public class Wimu {
 				System.out.println("Lucene dir: " + dir);
 				File indexDirectory = new File(dir);
 				// File indexDirectory = new File("indexLuceneDir");
-				directory = new MMapDirectory(indexDirectory);
-				ireader = DirectoryReader.open(directory);
-				isearcher = new IndexSearcher(ireader);
+				MMapDirectory directory = new MMapDirectory(indexDirectory);
+				DirectoryReader ireader = DirectoryReader.open(directory);
+				IndexSearcher isearcher = new IndexSearcher(ireader);
 				BooleanQuery bq = new BooleanQuery();
 				Query q = new TermQuery(new Term("uri", uri.trim()));
 				bq.add(q, BooleanClause.Occur.MUST);
@@ -103,9 +96,9 @@ public class Wimu {
 						mResults.put(dataset, Integer.parseInt(dtype));
 					}
 				}
-				mResults.forEach((ds, dTypes) -> {
-					System.out.println(ds + "\t" + dTypes);
-				});
+//				mResults.forEach((ds, dTypes) -> {
+//					System.out.println(ds + "\t" + dTypes);
+//				});
 				if (ireader != null) {
 					ireader.close();
 				}
@@ -122,10 +115,9 @@ public class Wimu {
 	public static Map<String, Integer> luceneSearch(String uri, int maxResults) throws IOException, ParseException {
 		ConcurrentHashMap<String, Integer> mResults = new ConcurrentHashMap<String, Integer>();
 		File indexDirectory = new File(luceneDir);
-		directory = new MMapDirectory(indexDirectory);
-		System.out.println("Lucene dir: " + indexDirectory.getAbsolutePath());
-		ireader = DirectoryReader.open(directory);
-		isearcher = new IndexSearcher(ireader);
+		MMapDirectory directory = new MMapDirectory(indexDirectory);
+		DirectoryReader ireader = DirectoryReader.open(directory);
+		IndexSearcher isearcher = new IndexSearcher(ireader);
 		BooleanQuery bq = new BooleanQuery();
 		Query q = new TermQuery(new Term("uri", uri.trim()));
 		bq.add(q, BooleanClause.Occur.MUST);
@@ -145,9 +137,9 @@ public class Wimu {
 				mResults.put(dataset, Integer.parseInt(dtype));
 			}
 		}
-		mResults.forEach((ds, dTypes) -> {
-			System.out.println(ds + "\t" + dTypes);
-		});
+//		mResults.forEach((ds, dTypes) -> {
+//			System.out.println(ds + "\t" + dTypes);
+//		});
 		if (ireader != null) {
 			ireader.close();
 		}
