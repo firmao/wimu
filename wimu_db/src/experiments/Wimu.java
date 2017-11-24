@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.jena.atlas.logging.LogCtl;
-import org.apache.jena.query.Dataset;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
@@ -22,17 +21,6 @@ import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.MMapDirectory;
 
 public class Wimu {
-	public static long count = 0;
-	public static long countDataTypeTriples = 0;
-	public static long totalTriples = 0;
-	public static long countFile = 0;
-	public static long lim = 10000000;
-	// public static long lim = 100000;
-	public static long origLim = 0;
-	public static long start = 0;
-	public static long totalTime = 0;
-	public static String fDatypeName = null;
-	public static Dataset datasetJena = null;
 	private static String luceneDir = "indexLuceneDir";
 
 	public static void main(String args[]) throws IOException, ClassNotFoundException, SQLException, ParseException {
