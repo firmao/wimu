@@ -64,6 +64,7 @@ public class DBpedia {
 	private static IndexSearcher isearcher;
 	private static IndexWriter iwriter;
 	private static MMapDirectory directory;
+	private static String luceneDir;
 
 	public static long count = 0;
 	public static long countDataTypeTriples = 0;
@@ -77,7 +78,7 @@ public class DBpedia {
 	public static String fDatypeName = null;
 	public static Dataset datasetJena = null;
 	private static String dumpDir;
-	private static String luceneDir;
+	
 
 	public static void create(String pDumpDir, String pLuceneDir) throws IOException {
 
@@ -109,11 +110,12 @@ public class DBpedia {
 		PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
 		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
 		iwriter = new IndexWriter(directory, config);
+		iwriter.deleteAll();
 		iwriter.commit();
 
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
-		System.out.println("Dump2Lucene...Parallel, starting: " + dateFormat.format(date));
+		System.out.println("DumpDBpedia2Lucene...Parallel, starting: " + dateFormat.format(date));
 		start = System.currentTimeMillis();
 
 		int cores = Runtime.getRuntime().availableProcessors();
@@ -253,15 +255,18 @@ public class DBpedia {
 
 			if (file.getName().endsWith(".bz2")) {
 				BZip2CompressorInputStream bz2In = new BZip2CompressorInputStream(in);
-				final byte[] buffer = new byte[8192];
-				int n = 0;
-				while (-1 != (n = bz2In.read(buffer))) {
-					out.write(buffer, 0, n);
+				synchronized (bz2In) {
+					final byte[] buffer = new byte[8192];
+					int n = 0;
+					while (-1 != (n = bz2In.read(buffer))) {
+						out.write(buffer, 0, n);
+					}
+					out.close();
+					bz2In.close();
 				}
-				out.close();
-				bz2In.close();
 			} else {
 				XZInputStream xzIn = new XZInputStream(in);
+				synchronized (xzIn) {
 				final byte[] buffer = new byte[8192];
 				int n = 0;
 				while (-1 != (n = xzIn.read(buffer))) {
@@ -269,6 +274,7 @@ public class DBpedia {
 				}
 				out.close();
 				xzIn.close();
+				}
 			}
 
 			file.delete();

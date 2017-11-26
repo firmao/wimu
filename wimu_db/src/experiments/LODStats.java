@@ -83,7 +83,7 @@ public class LODStats {
 
 		dumpDir = pDumpDir;
 		luceneDir = pLuceneDir;
-		
+
 		File f = new File("out");
 		if (!f.exists())
 			f.mkdir();
@@ -95,7 +95,7 @@ public class LODStats {
 		File f2 = new File("unzip");
 		if (!f2.exists())
 			f2.mkdir();
-		
+
 		System.out.println("Dumps dir: " + f1.getAbsolutePath());
 
 		File indexDirectory = new File(luceneDir);
@@ -109,6 +109,9 @@ public class LODStats {
 		PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
 		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
 		iwriter = new IndexWriter(directory, config);
+		
+		iwriter.deleteAll();
+		
 		iwriter.commit();
 
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -151,7 +154,7 @@ public class LODStats {
 			long tProcess = System.currentTimeMillis();
 			System.out.println("Parallel processing##");
 			setFiles.parallelStream().forEach(file -> {
-			//for (FileWIMU file : setFiles) {
+				// for (FileWIMU file : setFiles) {
 				String provenance = file.getDataset();
 				if (processCompressedFile(file, provenance)) {
 					successFiles.add(provenance);
@@ -161,7 +164,7 @@ public class LODStats {
 				}
 
 				alreadyProcessed.add(provenance);
-			//}
+				// }
 			});
 			long totalTProcess = System.currentTimeMillis() - tProcess;
 			System.out.println("Total TimeProcess(" + cores + " files): " + totalTProcess);
@@ -185,9 +188,10 @@ public class LODStats {
 			directory.close();
 		}
 	}
-	
-	private static void exitBefore() throws IOException{
-		System.out.println("##################### EXIT BEFORE, just testing\nInserting remaining " + mDatatypeTriples.size() + " Datatypes");
+
+	private static void exitBefore() throws IOException {
+		System.out.println("##################### EXIT BEFORE, just testing\nInserting remaining "
+				+ mDatatypeTriples.size() + " Datatypes");
 		insertLucene(mDatatypeTriples);
 		generateFile(datasetErrorsJena, "ErrorsJena.csv", true);
 		totalTime = System.currentTimeMillis() - start;
@@ -256,40 +260,48 @@ public class LODStats {
 
 			if (file.getName().endsWith(".bz2")) {
 				BZip2CompressorInputStream bz2In = new BZip2CompressorInputStream(in);
-				final byte[] buffer = new byte[8192];
-				int n = 0;
-				while (-1 != (n = bz2In.read(buffer))) {
-					out.write(buffer, 0, n);
+				synchronized (bz2In) {
+					final byte[] buffer = new byte[8192];
+					int n = 0;
+					while (-1 != (n = bz2In.read(buffer))) {
+						out.write(buffer, 0, n);
+					}
+					out.close();
+					bz2In.close();
 				}
-				out.close();
-				bz2In.close();
 			} else if (file.getName().endsWith(".xz")) {
 				XZInputStream xzIn = new XZInputStream(in);
-				final byte[] buffer = new byte[8192];
-				int n = 0;
-				while (-1 != (n = xzIn.read(buffer))) {
-					out.write(buffer, 0, n);
+				synchronized (xzIn) {
+					final byte[] buffer = new byte[8192];
+					int n = 0;
+					while (-1 != (n = xzIn.read(buffer))) {
+						out.write(buffer, 0, n);
+					}
+					out.close();
+					xzIn.close();
 				}
-				out.close();
-				xzIn.close();
 			} else if (file.getName().endsWith(".zip")) {
 				ZipArchiveInputStream zipIn = new ZipArchiveInputStream(in);
-				final byte[] buffer = new byte[8192];
-				int n = 0;
-				while (-1 != (n = zipIn.read(buffer))) {
-					out.write(buffer, 0, n);
+				synchronized (zipIn) {
+					final byte[] buffer = new byte[8192];
+					int n = 0;
+					while (-1 != (n = zipIn.read(buffer))) {
+						out.write(buffer, 0, n);
+					}
+					out.close();
+					zipIn.close();
 				}
-				out.close();
-				zipIn.close();
 			} else if (file.getName().endsWith(".tar.gz")) {
 				GzipCompressorInputStream gzIn = new GzipCompressorInputStream(in);
-				final byte[] buffer = new byte[8192];
-				int n = 0;
-				while (-1 != (n = gzIn.read(buffer))) {
-				    out.write(buffer, 0, n);
+				synchronized (gzIn) {
+					final byte[] buffer = new byte[8192];
+					int n = 0;
+					while (-1 != (n = gzIn.read(buffer))) {
+						out.write(buffer, 0, n);
+					}
+					out.close();
+					gzIn.close();
 				}
-				out.close();
-				gzIn.close();
 			}
 
 			file.delete();
@@ -377,11 +389,11 @@ public class LODStats {
 				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NQUADS);
 			} else if (fUnzip.getName().endsWith(".ttl")) {
 				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.TTL);
-			}else if (fUnzip.getName().endsWith(".nt")) {
+			} else if (fUnzip.getName().endsWith(".nt")) {
 				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NT);
-			}else if (fUnzip.getName().endsWith(".nq")) {
+			} else if (fUnzip.getName().endsWith(".nq")) {
 				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NQ);
-			}else {
+			} else {
 				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath());
 			}
 			fUnzip.delete();
@@ -399,9 +411,10 @@ public class LODStats {
 		// setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
 		System.out.println("Download Files_");
 		for (String sFileURL : setFileServer) {
-			if(count == cores) break;
-		//setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
-		//setFileServer.stream().limit(cores).forEach(sFileURL -> {
+			if (count == cores)
+				break;
+			// setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
+			// setFileServer.stream().limit(cores).forEach(sFileURL -> {
 			try {
 				String sFileName = getURLFileName(sFileURL);
 				FileWIMU fRet = new FileWIMU(dumpDir + "/" + sFileName);
@@ -416,7 +429,7 @@ public class LODStats {
 				// ex.printStackTrace();
 			}
 		}
-		//});
+		// });
 		return ret;
 	}
 
@@ -514,13 +527,13 @@ public class LODStats {
 		String ret = null;
 		String[] str = pURL.split("/");
 		ret = str[str.length - 1];
-		if(ret.indexOf('?') > 0)
+		if (ret.indexOf('?') > 0)
 			ret = ret.split("\\?")[0];
-		
+
 		File f = new File(dumpDir + "/" + ret);
-		if(f.exists())
-			ret = ret.replace(".", "_" + (countFile++) + "."); 
-			
+		if (f.exists())
+			ret = ret.replace(".", "_" + (countFile++) + ".");
+
 		return ret;
 	}
 }
