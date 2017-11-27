@@ -16,7 +16,7 @@ public class HelloSolr {
 		HttpSolrClient solr = initialize();
 		ConcurrentHashMap<String, Integer> mDatatypeTriples = loadHashMap();
 		
-		//insertSolr(mDatatypeTriples, solr);
+		insertSolr(mDatatypeTriples, solr);
 		searchSolr(solr);
 	}
 
@@ -69,9 +69,9 @@ public class HelloSolr {
 		
 		mDatatypeTriples.put("aa\tds1", 1);
 		mDatatypeTriples.put("aa\tds2", 2);
-		mDatatypeTriples.put("http://dbpedia.org/resource/Leipzig\tds3", 1);
+		mDatatypeTriples.put("http://dbpedia.org/resource/Leipzig\tds3", 3);
 		mDatatypeTriples.put("aa\tds4", 1);
-		mDatatypeTriples.put("aa\tds5", 1);
+		mDatatypeTriples.put("http://dbpedia.org/resource/Leipzig\tds7", 84);
 		mDatatypeTriples.put("aa\tds6", 1);
 		mDatatypeTriples.put("http://dbpedia.org/resource/Leipzig1\tds7", 1);
 		mDatatypeTriples.put("aa\tds8", 1);
