@@ -7,9 +7,7 @@ http://www.dati.friuliveneziagiulia.it/api/views/2mzz-bbrb/rows.rdf?accessType=D
 
 create dumpLODStats luceneLodStats_n lodstats
 
-
-
-create create dumpLODStats luceneEndPoints endpoints
+create dumpLODStats luceneDir endpoints
 
 java -Xmx80G -jar wimu.jar create dumpLODStats luceneLodStats lodstats > logwimuLodstats.txt 2>&1 &
 
