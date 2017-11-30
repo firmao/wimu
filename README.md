@@ -16,23 +16,22 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 -`Tomcat 6`. 
 
-- `Apache Lucene 4.4`.
+- `Apache Solr`.
 
 # Build instructions:
 
-## Apache Lucene index
+## Apache Solr index
 <pre>
-java -jar wimu.jar search < URI > < MAX_RESULTS_LUCENE > < LUCENE_INDEX_DIR >
-  
-java -jar wimu.jar searcg < URI > < MAX_RESULTS_LUCENE > < LUCENE_INDEX_DIR > < optional-LUCENE_INDEX_DIR_1,...,LUCENE_INDEX_DIR_N >
+java -jar wimu.jar search < URI / * >
 
-
-java -jar wimu.jar create < DUMP_DIR > < LUCENE_NAME_DIR > < dbpedia >
-
-java -jar wimu.jar create < DUMP_DIR > < LUCENE_NAME_DIR > < lodstats >
-
-java -jar wimu.jar create < DUMP_DIR > < LUCENE_NAME_DIR > < endpoints >
+java -jar wimu.jar create <dbpedia / dumps / endpoints / dbpediaEndpoint / * >
 </pre>  
+where:
+- `dbpedia - Process only Dumps from DBpedia.`
+- `dumps - Process all Dumps from the whole LODStats.`
+- `endpoints - All Endpoints from LODstats.`
+- `dbpediaEndPoint - Process only DBpedia SPARQL EndPoint.`
+- `*  - Dumps and SPARQL Endpoints from LODstats.` 
 
 ## In video:
 https://youtu.be/13cwc_UwfPc
