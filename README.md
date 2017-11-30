@@ -24,7 +24,7 @@ We finally show use-cases of applications that can immediately benefit from our 
 <pre>
 java -jar wimu.jar search < URI / * >
 
-java -jar wimu.jar create <dbpedia / dumps / endpoints / dbpediaEndpoint / * >
+java -jar wimu.jar create < dbpedia / dumps / endpoints / dbpediaEndpoint / * >
 </pre>  
 where:
 - `dbpedia - Process only Dumps from DBpedia.`
