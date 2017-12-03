@@ -32,9 +32,8 @@ bin/solr create -c wimu
 </pre>
 more information about [solr](https://lucene.apache.org/solr/guide/6_6/running-solr.html)
 
+To create the index:
 <pre>
-java -jar wimu.jar search < URI / * >
-
 java -jar wimu.jar create < dbpedia / dumps / endpoints / dbpediaEndpoint / * >
 </pre>  
 where:
@@ -43,6 +42,15 @@ where:
 - `endpoints - All Endpoints from LODstats.`
 - `dbpediaEndPoint - Process only DBpedia SPARQL EndPoint.`
 - `*  - Dumps and SPARQL Endpoints from LODstats.` 
+
+To search in the index via command line:
+<pre>
+java -jar wimu.jar search < URI / * >
+</pre>  
+where:
+- `URI - specific URI to search.`
+- `*  - All the data form the index.` 
+
 
 Download [wimu.jar](https://goo.gl/wFBydb)
 
