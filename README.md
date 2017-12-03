@@ -33,7 +33,7 @@ where:
 - `dbpediaEndPoint - Process only DBpedia SPARQL EndPoint.`
 - `*  - Dumps and SPARQL Endpoints from LODstats.` 
 
-Download wimu.jar<https://goo.gl/wFBydb>
+Download [wimu.jar](https://goo.gl/wFBydb)
 
 ## In video:
 https://youtu.be/13cwc_UwfPc
