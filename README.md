@@ -21,13 +21,18 @@ We finally show use-cases of applications that can immediately benefit from our 
 # Build instructions:
 
 ## Apache Solr index
-<pre>
+
 - Start the solr server.
--- bin/solr start
+<pre>
+bin/solr start
+</pre>
 - Create a new core directory called "wimu".
--- bin/solr create -c wimu
+<pre>
+bin/solr create -c wimu
+</pre>
 more information about [solr](https://lucene.apache.org/solr/guide/6_6/running-solr.html)
 
+<pre>
 java -jar wimu.jar search < URI / * >
 
 java -jar wimu.jar create < dbpedia / dumps / endpoints / dbpediaEndpoint / * >
