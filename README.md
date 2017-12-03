@@ -22,6 +22,12 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 ## Apache Solr index
 <pre>
+- Start the solr server.
+-- bin/solr start
+- Create a new core directory called "wimu".
+-- bin/solr create -c wimu
+more information about [solr](https://lucene.apache.org/solr/guide/6_6/running-solr.html)
+
 java -jar wimu.jar search < URI / * >
 
 java -jar wimu.jar create < dbpedia / dumps / endpoints / dbpediaEndpoint / * >
