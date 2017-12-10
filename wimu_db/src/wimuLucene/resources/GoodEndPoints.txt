@@ -1,0 +1,2 @@
+http://geo.linkeddata.es/sparql
+http://fr.dbpedia.org/sparql
