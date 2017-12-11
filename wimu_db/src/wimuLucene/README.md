@@ -4,5 +4,5 @@ java -jar create < dump_dir > < lucene_name_dir > < dbpedia / lodstats / endpoin
 
 example:
 <pre>
-java -Xmx80G -jar wimuLucene.jar create dumpDir luceneDir dumps > logwimuLucene.txt 2>&1 &
+java -Xmx80G -jar wimuLucene.jar create dumpDir luceneDir dumps logwimuLucene.txt > logwimuLucene.txt 2>&1 &
 </pre>
