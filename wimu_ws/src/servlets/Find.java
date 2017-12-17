@@ -5,6 +5,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -22,7 +23,11 @@ public class Find extends HttpServlet {
 	 */
 	public Find() {
 		super();
-		// TODO Auto-generated constructor stub
+		try {
+			HDTQueryMan.loadFileMap("md5HDT.csv");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -51,9 +56,10 @@ public class Find extends HttpServlet {
 																// problems with
 																// QueryString.
 				request.getSession().setAttribute("uri", uri);
-
-				Map<String, Integer> result = DBUtil.findEndPoint(uri);
-
+				
+				//Map<String, Integer> result = DBUtil.findEndPoint(uri);
+				Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri);
+				
 				if ((result != null) && (result.size() > 0)) {
 					String json = "[";
 					for (Map.Entry<String, Integer> elem : result.entrySet()) {
@@ -64,25 +70,6 @@ public class Find extends HttpServlet {
 					json = json.replaceFirst(",", "");
 					json += "]";
 					response.getOutputStream().println(json);
-
-					// response.getOutputStream().println("<table border='1'> "
-					// + "<tr> "
-					// + "<th>EndPoint</th> "
-					// + "<th>Count DataType</th> "
-					// + "</tr>");
-					// result.entrySet().forEach(elem ->{
-					// String endPoint = elem.getKey();
-					// int dType = elem.getValue();
-					// try {
-					// response.getOutputStream().println("<tr> "
-					// + "<td>"+ endPoint +"</td> "
-					// + "<td>"+ dType +"</td> "
-					// + "</tr>");
-					// } catch (IOException e) {
-					// e.printStackTrace();
-					// }
-					// });
-					// response.getOutputStream().println("</table>");
 				} else {
 					response.getOutputStream().println("<h1>NOTHING !</h1>");
 				}
@@ -93,10 +80,79 @@ public class Find extends HttpServlet {
 				findSQL(request, response);
 			} else if (request.getParameter("uri1") != null) {
 				findWeb(request, response);
+			} else if (request.getParameter("urihdt") != null) {
+				findHdt(request, response);
+			} else if (request.getParameter("statistics") != null) {
+				findStatistics(request, response);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void findStatistics(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		long start = System.currentTimeMillis();
+		String sDatasets = HDTQueryMan.printDatasets();
+		//int dTypesDBpedia = EndPoint.getDataTypes(uri);
+		//result.put("http://dbpedia.org/sparql", dTypesDBpedia);
+		long totalTime = System.currentTimeMillis() - start;
+		
+		if ((sDatasets != null) && (sDatasets.length() > 0)) {
+			response.getOutputStream().println("<table style=\"margin-left: auto; margin-right: auto;\" border=\"1\"> "
+					+ "<tbody> <tr> <td><strong>Dataset</strong></td> <td><strong>Triples</strong></td>"
+					+ "<td><strong>Datatypes/Literals</strong></td> <td><strong>Type</strong></td></tr>");
+			
+			try {
+				response.getOutputStream().println(sDatasets);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			response.getOutputStream().println("</tbody></table>");
+		} else {
+			response.getOutputStream().println("<h1>NOTHING !</h1>");
+		}
+		response.getOutputStream().println("<br> TotalTime: " + totalTime + " ms"
+				+ "<br>The data comes from the most useful/popular datasets from the <a href='http://linkeddata.org/'>http://linkeddata.org/</a>"
+				+ " available in HDT format <a href='http://www.rdfhdt.org/datasets/'>http://www.rdfhdt.org/</a>");
+	}
+
+	private void findHdt(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String uri = request.getParameter("urihdt");
+		request.getSession().setAttribute("urihdt", uri);
+		long start = System.currentTimeMillis();
+		Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri);
+		//int dTypesDBpedia = EndPoint.getDataTypes(uri);
+		//result.put("http://dbpedia.org/sparql", dTypesDBpedia);
+		long totalTime = System.currentTimeMillis() - start;
+		
+		if ((result != null) && (result.size() > 0)) {
+			response.getOutputStream().println(
+					"<table border='1'> " + "<tr> " + "<th>Dataset</th> " + "<th>Count DataType</th> " + "</tr>");
+			result.entrySet().forEach(elem -> {
+				String dataset = elem.getKey();
+				
+				String md5 = dataset.substring(0, dataset.indexOf("."));
+				String dsName = HDTQueryMan.md5Names.get(md5);
+				dataset = (dsName != null) ? dsName : dataset;
+				
+				//String urlDataset = "http://gaia.infor.uva.es/hdt/" + dataset + ".gz";
+				String urlDataset = "http://download.lodlaundromat.org/"+md5+"?type=hdt";
+						
+				int dType = elem.getValue();
+				try {
+					response.getOutputStream()
+					.println("<tr> " + "<td><a href='"+ urlDataset +"'>" + dataset + "</a></td> " + "<td>" + dType + "</td> " + "</tr>");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			});
+			response.getOutputStream().println("</table>");
+		} else {
+			response.getOutputStream().println("<h1>NOTHING !</h1>");
+		}
+		response.getOutputStream().println("<br> TotalTime: " + totalTime + " ms"
+				+ "<br>The data comes from the most useful/popular datasets from the <a href='http://linkeddata.org/'>http://linkeddata.org/</a>"
+				+ " available in HDT format <a href='http://www.rdfhdt.org/datasets/'>http://www.rdfhdt.org/</a>");
 	}
 
 	private void findWeb(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -105,8 +161,11 @@ public class Find extends HttpServlet {
 		final String uri1 = uri;												// with QueryString.
 		request.getSession().setAttribute("uri1", uri);
 
+		long start = System.currentTimeMillis();
 		Map<String, Integer> result = DBUtil.findEndPoint(uri);
-
+		long totalTime = System.currentTimeMillis() - start;
+		totalTime = TimeUnit.MILLISECONDS.toMinutes(totalTime);
+		
 		if ((result != null) && (result.size() > 0)) {
 			response.getOutputStream().println(
 					"<table border='1'> " + "<tr> " + "<th>Dataset</th> " + "<th>Count DataType</th> " + "</tr>");
@@ -125,6 +184,9 @@ public class Find extends HttpServlet {
 		} else {
 			response.getOutputStream().println("<h1>NOTHING !</h1>");
 		}
+		response.getOutputStream().println("<br> TotalTime: " + totalTime + " minutes"
+				+ "<br>The data comes from <a href='http://lodstats.aksw.org/'>LODStats</a>"
+				+ " and <a href='http://downloads.dbpedia.org/2016-10/core-i18n/en/'>DBpedia Dumps</a>");
 	}
 
 	private void findSQL(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -169,24 +231,6 @@ public class Find extends HttpServlet {
 			json = json.replaceFirst(",", "");
 			json += "]";
 			response.getOutputStream().println(json);
-			// response.getOutputStream().println("<table border='1'> "
-			// + "<tr> "
-			// + "<th>URI</th> "
-			// + "<th>Count DataType</th> "
-			// + "</tr>");
-			// result.entrySet().forEach(elem ->{
-			// String uri = elem.getKey();
-			// int dType = elem.getValue();
-			// try {
-			// response.getOutputStream().println("<tr> "
-			// + "<td>"+ uri +"</td> "
-			// + "<td>"+ dType +"</td> "
-			// + "</tr>");
-			// } catch (IOException e) {
-			// e.printStackTrace();
-			// }
-			// });
-			// response.getOutputStream().println("</table>");
 		} else {
 			response.getOutputStream().println("<h1>NOTHING !</h1>");
 		}
