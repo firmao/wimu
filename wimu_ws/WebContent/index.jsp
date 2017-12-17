@@ -47,11 +47,25 @@ position:absolute;
 	<h1>Where is my URI?</h1>
 	<input type="text" id="uri" size="80">
 	<button onclick="findEndPoint()">Find Datasets</button>
-	<button onclick="findURI()">Find the URIs</button>
+	<button onclick="getStatistics()">Statistics</button>
 	<button onclick="findSQL()">SQL query</button>
 	<br>Examples: 
-	<br>URI: http://semanticscience.org/resource/SIO_000272
-	<br>EndPoint: http://crm.rkbexplorer.com/sparql
+	<br>URI: http://dbpedia.org/resource/Leipzig
+	
+<table style="margin-left: auto; margin-right: auto;" border="1">
+<tbody>
+<tr>
+<td><strong>Dataset</strong></td>
+<td><strong>Triples</strong></td>
+<td><strong>Datatypes/Literals</strong></td>
+<td><strong>Type</strong></td>
+</tr>
+
+
+
+</tbody>
+</table>
+	
 	<div id="loadingDiv" style="display: none;">
 		<h1>Please wait, Loading...</h1>
 		<img src="img/comi.gif">
@@ -65,7 +79,8 @@ position:absolute;
 			document.getElementById('divhider').style.display = "block";
 			var url = document.getElementById("uri").value;
 			url=encodeURIComponent(url);
-			window.location.assign("Find?uri1=" + url);
+			//window.location.assign("Find?uri1=" + url);
+			window.location.assign("Find?urihdt=" + url);
 		}
 		function findURI() {
 			document.getElementById('loadingDiv').style.display = "block";
@@ -81,6 +96,14 @@ position:absolute;
 			url=encodeURIComponent(url);
 			window.location.assign("Find?SQL=" + url);
 		}
+		function getStatistics() {
+			document.getElementById('loadingDiv').style.display = "block";
+			document.getElementById('divhider').style.display = "block";
+			var url = document.getElementById("uri").value;
+			url=encodeURIComponent(url);
+			window.location.assign("Find?statistics=" + url);
+		}
+		
 	</script>
 </body>
 </html>
