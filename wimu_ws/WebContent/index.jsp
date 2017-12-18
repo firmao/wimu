@@ -48,7 +48,7 @@ position:absolute;
 	<input type="text" id="uri" size="80">
 	<button onclick="findEndPoint()">Find Datasets</button>
 	<button onclick="getStatistics()">Statistics</button>
-	<button onclick="findSQL()">SQL query</button>
+	<button onclick="uploadHDT()">Upload HDT dataset</button>
 	<br>Examples: 
 	<br>URI: http://dbpedia.org/resource/Leipzig
 	
@@ -95,6 +95,11 @@ position:absolute;
 			var url = document.getElementById("uri").value;
 			url=encodeURIComponent(url);
 			window.location.assign("Find?SQL=" + url);
+		}
+		function uploadHDT() {
+			document.getElementById('loadingDiv').style.display = "block";
+			document.getElementById('divhider').style.display = "block";
+			window.location.assign('uploadHDT.jsp');
 		}
 		function getStatistics() {
 			document.getElementById('loadingDiv').style.display = "block";
