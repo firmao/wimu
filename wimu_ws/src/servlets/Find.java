@@ -3,9 +3,12 @@ package servlets;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -57,8 +60,11 @@ public class Find extends HttpServlet {
 																// QueryString.
 				request.getSession().setAttribute("uri", uri);
 				
-				//Map<String, Integer> result = DBUtil.findEndPoint(uri);
-				Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri);
+				String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
+				if(request.getSession().getAttribute("dirHDT") != null){
+					dirHDT = request.getSession().getAttribute("dirHDT").toString();
+				}
+				Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
 				
 				if ((result != null) && (result.size() > 0)) {
 					String json = "[";
@@ -74,6 +80,8 @@ public class Find extends HttpServlet {
 					response.getOutputStream().println("<h1>NOTHING !</h1>");
 				}
 				// response.getWriter().write(sameas.getSameAsURI(request.getParameter("uri"),true));
+			} else if (request.getParameter("uris") != null) {
+				findURIS(request, response);
 			} else if (request.getParameter("endpoint") != null) {
 				findURIS(request, response);
 			} else if (request.getParameter("SQL") != null) {
@@ -84,7 +92,11 @@ public class Find extends HttpServlet {
 				findHdt(request, response);
 			} else if (request.getParameter("statistics") != null) {
 				findStatistics(request, response);
+			} else if (request.getParameter("dirHDT") != null) {
+				request.getSession().setAttribute("dirHDT", request.getParameter("dirHDT"));
+				response.sendRedirect("index.jsp");
 			}
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -120,9 +132,13 @@ public class Find extends HttpServlet {
 		String uri = request.getParameter("urihdt");
 		request.getSession().setAttribute("urihdt", uri);
 		long start = System.currentTimeMillis();
-		Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri);
-		//int dTypesDBpedia = EndPoint.getDataTypes(uri);
-		//result.put("http://dbpedia.org/sparql", dTypesDBpedia);
+		
+		String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
+		if(request.getSession().getAttribute("dirHDT") != null){
+			dirHDT = request.getSession().getAttribute("dirHDT").toString();
+		}
+		Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
+
 		long totalTime = System.currentTimeMillis() - start;
 		
 		if ((result != null) && (result.size() > 0)) {
@@ -147,12 +163,14 @@ public class Find extends HttpServlet {
 				}
 			});
 			response.getOutputStream().println("</table>");
+			response.getOutputStream().println("<h3>URI: " + uri + "</h3>");
 		} else {
 			response.getOutputStream().println("<h1>NOTHING !</h1>");
 		}
 		response.getOutputStream().println("<br> TotalTime: " + totalTime + " ms"
 				+ "<br>The data comes from the most useful/popular datasets from the <a href='http://linkeddata.org/'>http://linkeddata.org/</a>"
-				+ " available in HDT format <a href='http://www.rdfhdt.org/datasets/'>http://www.rdfhdt.org/</a>");
+				+ " available in HDT format <a href='http://www.rdfhdt.org/datasets/'>http://www.rdfhdt.org/</a><br>"
+				+ "<a href='/LinkLion2_WServ/'>Back</a>");
 	}
 
 	private void findWeb(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -212,28 +230,46 @@ public class Find extends HttpServlet {
 	}
 
 	private void findURIS(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		// response.getOutputStream().println("<h1>Not implemented yet</h1>");
-		String endpoint = request.getParameter("endpoint");
-		endpoint = endpoint.replaceAll("123nada", "#").trim(); // to solve some
-																// problems with
-																// QueryString.
-		request.getSession().setAttribute("endpoint", endpoint);
-
-		Map<String, Integer> result = DBUtil.findAllURIDataTypes(endpoint);
-
-		if ((result != null) && (result.size() > 0)) {
-			String json = "[";
-			for (Map.Entry<String, Integer> elem : result.entrySet()) {
-				String uri = elem.getKey();
-				int dType = elem.getValue();
-				json += ",{ \"uri\":\"" + uri + "\",\"CountDataType\":\"" + dType + "\"}";
-			}
-			json = json.replaceFirst(",", "");
-			json += "]";
-			response.getOutputStream().println(json);
-		} else {
-			response.getOutputStream().println("<h1>NOTHING !</h1>");
-		}
+		String uris = request.getParameter("uris");
+		request.getSession().setAttribute("uris", uris);
+		
+		Set<String> setUris = Arrays.stream(uris.split(",")).collect(Collectors.toSet());
+		
+		String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
+		if(request.getSession().getAttribute("dirHDT") != null){
+			dirHDT = request.getSession().getAttribute("dirHDT").toString();
+		}		
+		Map<String, Map<String, Integer>> results = HDTQueryMan.findDatasetsHDT(setUris, dirHDT);
+		
+		results.keySet().parallelStream().forEach(uri ->{
+			Map<String, Integer> result = results.get(uri);
+			String json = "[\"uri\":\"" + uri + "\"";
+			if ((result != null) && (result.size() > 0)) {
+				//String json = "[\"uri\":\"" + uri + "\"";
+				for (Map.Entry<String, Integer> elem : result.entrySet()) {
+					String endPoint = elem.getKey();
+					int dType = elem.getValue();
+					json += ",{\"EndPoint\":\"" + endPoint + "\",\"CountDataType\":\"" + dType + "\"}";
+				}
+				json = json.replaceFirst(",", "");
+				json += "]";
+				try {
+					response.getOutputStream().println(json);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			} else {
+				try {
+					json += "]";
+					response.getOutputStream().println(json);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}	
+		});
+		
 	}
 
 }
