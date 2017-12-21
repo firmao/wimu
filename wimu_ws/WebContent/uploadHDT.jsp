@@ -10,9 +10,13 @@
     <form action="UploadHDTfile" method="post" enctype="multipart/form-data">
         <ul>
             <h3>File Upload:</h3>
-            Select a file to upload: <br />
-            <input type="file" name="file" size="50" />
-            <br />
+            Select a file to upload: <br>
+            <input type="file" name="file" size="50" accept=".hdt"  multiple> <br>
+            <br>
+            Metadata about the dataset (Example: URL, URI, location, name, etc...):
+            <br>
+            <input type="text" id="txtMetadata" />
+            <br>
             <input type="submit" value="Upload File" />
         </ul>
     </form>
