@@ -3,6 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
+
+<%
+if((session.getAttribute("dirHDT") == null) 
+		|| (session.getAttribute("dirHDT") == null) 
+		|| (session.getAttribute("dirHDT") == null)){
+	response.sendRedirect("conf.jsp");
+	//out.close();
+}
+%>
+
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <title property="dc:title">Where is my URI?</title>
 <link rel="stylesheet" href="style.css" type="text/css" />
