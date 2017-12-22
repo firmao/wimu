@@ -40,6 +40,7 @@ public class HDTQueryMan {
 			System.err.println("md5ConfigFile not found.");
 			return;
 		}
+		if(md5Names.size() > 0) return;
 		List<String> lstLines = FileUtils.readLines(f, "UTF-8");
 		for (String line : lstLines) {
 			String s[] = line.split("\t");

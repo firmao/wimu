@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.lucene.queryparser.classic.ParseException;
+
 /**
  * Servlet implementation class Find
  */
@@ -26,11 +28,6 @@ public class Find extends HttpServlet {
 	 */
 	public Find() {
 		super();
-		try {
-			HDTQueryMan.loadFileMap("md5HDT.csv");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	/**
@@ -39,7 +36,12 @@ public class Find extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		handleRequestAndRespond(request, response);
+		try {
+			handleRequestAndRespond(request, response);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -48,10 +50,15 @@ public class Find extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		handleRequestAndRespond(request, response);
+		try {
+			handleRequestAndRespond(request, response);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	private void handleRequestAndRespond(HttpServletRequest request, HttpServletResponse response) {
+	private void handleRequestAndRespond(HttpServletRequest request, HttpServletResponse response) throws ParseException {
 		try {
 			if (request.getParameter("uri") != null) {
 				String uri = request.getParameter("uri");
@@ -60,11 +67,7 @@ public class Find extends HttpServlet {
 																// QueryString.
 				request.getSession().setAttribute("uri", uri);
 				
-				String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
-				if(request.getSession().getAttribute("dirHDT") != null){
-					dirHDT = request.getSession().getAttribute("dirHDT").toString();
-				}
-				Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
+				Map<String, Integer> result = findDatasets(uri, request);
 				
 				if ((result != null) && (result.size() > 0)) {
 					String json = "[";
@@ -92,14 +95,49 @@ public class Find extends HttpServlet {
 				findHdt(request, response);
 			} else if (request.getParameter("statistics") != null) {
 				findStatistics(request, response);
-			} else if (request.getParameter("dirHDT") != null) {
-				request.getSession().setAttribute("dirHDT", request.getParameter("dirHDT"));
-				response.sendRedirect("index.jsp");
-			}
+			} 
+//				else if ((request.getParameter("dirHDT") != null) 
+//					&& (request.getParameter("dirEndpoints") != null) 
+//					&& (request.getParameter("dirDumps") != null)){
+//				request.getSession().setAttribute("dirHDT", request.getParameter("dirHDT"));
+//				request.getSession().setAttribute("dirEndpoints", request.getParameter("dirEndpoints"));
+//				request.getSession().setAttribute("dirDumps", request.getParameter("dirDumps"));
+//				
+//				try {
+//					HDTQueryMan.loadFileMap("md5HDT.csv");
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//				
+//				response.sendRedirect("index.jsp");
+//			}
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private Map<String, Integer> findDatasets(String uri, HttpServletRequest request) throws IOException, ParseException {
+		String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
+		String dirEndpoints = System.getProperty("user.home") + "/endpoints";
+		String dirDumps = System.getProperty("user.home") + "/dumps";
+		if(request.getSession().getAttribute("dirHDT") != null){
+			dirHDT = request.getSession().getAttribute("dirHDT").toString();
+		}
+		if(request.getSession().getAttribute("dirEndpoints") != null){
+			dirEndpoints = request.getSession().getAttribute("dirEndpoints").toString();
+		}
+		if(request.getSession().getAttribute("dirDumps") != null){
+			dirDumps = request.getSession().getAttribute("dirDumps").toString();
+		}
+		
+		Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
+		Set<String> sDirs = new HashSet<String>();
+		sDirs.add(dirDumps);
+		sDirs.add(dirEndpoints);
+		result.putAll(LuceneSearch.search(uri, 1000, sDirs));
+		
+		return result;
 	}
 
 	private void findStatistics(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -128,16 +166,12 @@ public class Find extends HttpServlet {
 				+ " available in HDT format <a href='http://www.rdfhdt.org/datasets/'>http://www.rdfhdt.org/</a>");
 	}
 
-	private void findHdt(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	private void findHdt(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException {
 		String uri = request.getParameter("urihdt");
 		request.getSession().setAttribute("urihdt", uri);
 		long start = System.currentTimeMillis();
 		
-		String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
-		if(request.getSession().getAttribute("dirHDT") != null){
-			dirHDT = request.getSession().getAttribute("dirHDT").toString();
-		}
-		Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
+		Map<String, Integer> result = findDatasets(uri, request);
 
 		long totalTime = System.currentTimeMillis() - start;
 		
@@ -151,8 +185,17 @@ public class Find extends HttpServlet {
 				String dsName = HDTQueryMan.md5Names.get(md5);
 				dataset = (dsName != null) ? dsName : dataset;
 				
+				String urlDataset = null;
 				//String urlDataset = "http://gaia.infor.uva.es/hdt/" + dataset + ".gz";
-				String urlDataset = "http://download.lodlaundromat.org/"+md5+"?type=hdt";
+				if(dataset.startsWith("http") || dataset.startsWith("ftp"))
+					urlDataset = dataset;
+				else {
+					if(dsName != null){
+						urlDataset = "http://download.lodlaundromat.org/"+md5+"?type=hdt";
+					}else{
+						urlDataset = dataset;
+					}
+				}
 						
 				int dType = elem.getValue();
 				try {
