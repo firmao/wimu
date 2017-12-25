@@ -25,7 +25,6 @@ public class WimuSearch {
 			try {
 				System.out.println("Lucene dir: " + dir);
 				File indexDirectory = new File(dir);
-				// File indexDirectory = new File("indexLuceneDir");
 				MMapDirectory directory = new MMapDirectory(indexDirectory);
 				DirectoryReader ireader = DirectoryReader.open(directory);
 				IndexSearcher isearcher = new IndexSearcher(ireader);

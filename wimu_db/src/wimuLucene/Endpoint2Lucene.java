@@ -45,9 +45,10 @@ public class Endpoint2Lucene {
 	private static IndexWriter iwriter;
 	private static MMapDirectory directory;
 	private static String luceneDir;
-	
+
 	public static long start = 0;
 	public static long totalTime = 0;
+	public static long lim = 100000;
 
 	public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
 		LogCtl.setLog4j("log4j.properties");
@@ -61,7 +62,8 @@ public class Endpoint2Lucene {
 	public static void create(String pLuceneDir, boolean forceSameDir) throws IOException {
 		luceneDir = pLuceneDir;
 		File indexDirectory = new File(luceneDir);
-		if(!forceSameDir) indexDirectory.mkdir();
+		if (!forceSameDir)
+			indexDirectory.mkdir();
 		directory = new MMapDirectory(indexDirectory);
 		System.out.println("Created Lucene dir: " + indexDirectory.getAbsolutePath());
 		urlAnalyzer = new SimpleAnalyzer(LUCENE_VERSION);
@@ -71,7 +73,7 @@ public class Endpoint2Lucene {
 		PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
 		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
 		iwriter = new IndexWriter(directory, config);
-//		if(!forceSameDir) iwriter.deleteAll();
+		// if(!forceSameDir) iwriter.deleteAll();
 		iwriter.commit();
 
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -82,7 +84,7 @@ public class Endpoint2Lucene {
 		processEndPoints();
 		totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total time: " + totalTime + " TotalTriples: " + totalTriples);
-		
+
 		date = new Date();
 		System.out.println("Dump2Lucene...Parallel, finalize at: " + dateFormat.format(date));
 		if (iwriter != null) {
@@ -91,7 +93,7 @@ public class Endpoint2Lucene {
 		if (directory != null) {
 			directory.close();
 		}
-		
+
 	}
 
 	private static void processEndPoints() throws IOException {
@@ -101,16 +103,16 @@ public class Endpoint2Lucene {
 			try {
 				totalTriples += extract(endPoint, 9999);
 				System.out.println("SUCESS: " + endPoint);
-			} catch (ClassNotFoundException | SQLException | IOException e) {
+			} catch (Exception e) {
 				mEndPointError.put(endPoint, e.getMessage());
 				System.out.println("FAIL: " + endPoint + " ERROR: " + e.getMessage());
-				//e.printStackTrace();
+				// e.printStackTrace();
 			}
 		});
 		generateFile(mEndPointError, "EndpointErrors.csv", true);
 	}
 
-	private static void testEndPoint(String[] args) throws ClassNotFoundException, SQLException, IOException {
+	private static void testEndPoint(String[] args) throws Exception {
 		long start = System.currentTimeMillis();
 		// String endPoint = "http://dbpedia.org/sparql";
 		String endPoint = args[0];
@@ -120,8 +122,9 @@ public class Endpoint2Lucene {
 		System.out.println("Total time: " + totalTime + " TotalTriples: " + totalTriples);
 	}
 
-	private static long extract(String endPoint, int limit) throws ClassNotFoundException, SQLException, IOException {
+	private static synchronized long extract(String endPoint, int limit) throws Exception {
 		long totalTriples = 0;
+		String errorMessage = null;
 
 		System.out.println("SERIAL OFFSET: Extracting datatypes from: " + endPoint);
 
@@ -135,7 +138,7 @@ public class Endpoint2Lucene {
 					+ " limit " + offsetSize;
 			// System.out.println(sparqlQueryString);
 
-			//long start = System.currentTimeMillis();
+			// long start = System.currentTimeMillis();
 
 			Query query = QueryFactory.create(sparqlQueryString);
 
@@ -144,6 +147,7 @@ public class Endpoint2Lucene {
 			String uriDataset = null;
 			QueryExecution qexec = QueryExecutionFactory.sparqlService(endPoint, query);
 			try {
+				// qexec.setTimeout(300000); 5 minutes timeout
 				ResultSet results = qexec.execSelect();
 				for (; results.hasNext();) {
 					try {
@@ -162,16 +166,21 @@ public class Endpoint2Lucene {
 					}
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				mEndPointError.put(endPoint, e.getMessage());
+				errorMessage = e.getMessage();
 				break;
 			} finally {
 				qexec.close();
 			}
-			//long totalTime = System.currentTimeMillis() - start;
-			//System.out.println("offset: " + offset + " endPoint:" + endPoint + " - Total time: " + totalTime
-			//		+ " triples: " + countOffsetTriples + " MapSize: " + mDatatypeTriples.size());
+			// long totalTime = System.currentTimeMillis() - start;
+			// System.out.println("offset: " + offset + " endPoint:" + endPoint
+			// + " - Total time: " + totalTime
+			// + " triples: " + countOffsetTriples + " MapSize: " +
+			// mDatatypeTriples.size());
+			System.out.println("offset: " + offset);
 			offset += offsetSize;
-			if (mDatatypeTriples.size() > (Integer.MAX_VALUE - 3)) {
+			// if (mDatatypeTriples.size() > (Integer.MAX_VALUE - 3)) {
+			if (mDatatypeTriples.size() > lim) {
 				System.out.println("MAX number of elements HashMap, inserting lucene.");
 				insertLucene(mDatatypeTriples);
 				mDatatypeTriples.clear();
@@ -180,18 +189,22 @@ public class Endpoint2Lucene {
 			// generateFile(mDatatypeTriples, "VeryHugeFile.nt");
 			// System.exit(0);
 		} while (true);
-		
-		if(mDatatypeTriples.mappingCount() > 0)
+
+		if (mDatatypeTriples.mappingCount() > 0)
 			insertLucene(mDatatypeTriples);
-		
+
+		if (errorMessage != null)
+			throw new Exception(errorMessage);
+
 		return totalTriples;
 	}
 
 	private static void insertLucene(ConcurrentHashMap<String, Integer> mDatatypeTriples2) throws IOException {
-		mDatatypeTriples2.entrySet().parallelStream().forEach(elem ->{
+		System.out.println("Inserting Lucene " + mDatatypeTriples2.size() + " dataType triples");
+		mDatatypeTriples2.entrySet().parallelStream().forEach(elem -> {
 			String uriDs = elem.getKey();
 			int dTypes = elem.getValue();
-			
+
 			String s[] = uriDs.split("\t");
 			String uri = s[0];
 			String dataset = s[1];

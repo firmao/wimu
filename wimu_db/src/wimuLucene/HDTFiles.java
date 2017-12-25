@@ -1,7 +1,4 @@
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
@@ -12,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,18 +18,18 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
-import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Dataset;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.system.StreamRDF;
-import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.impl.ModelCom;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -47,9 +43,11 @@ import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.util.Version;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
-import org.tukaani.xz.XZInputStream;
+import org.rdfhdt.hdt.hdt.HDT;
+import org.rdfhdt.hdt.hdt.HDTManager;
+import org.rdfhdt.hdtjena.HDTGraph;
 
-public class LODStats {
+public class HDTFiles {
 	public static Set<String> alreadyProcessed = new HashSet<String>();
 	public static Set<String> errorFiles = new HashSet<String>();
 	public static Set<String> successFiles = new HashSet<String>();
@@ -117,23 +115,19 @@ public class LODStats {
 		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
 		iwriter = new IndexWriter(directory, config);
 
-		// iwriter.deleteAll();
+		iwriter.deleteAll();
 		//
 		iwriter.commit();
 
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
-		System.out.println("Dump2Lucene...Parallel, starting: " + dateFormat.format(date));
+		System.out.println("HDT2Lucene...Parallel, starting: " + dateFormat.format(date));
 		start = System.currentTimeMillis();
 
 		int cores = Runtime.getRuntime().availableProcessors();
 		alreadyProcessed.addAll(WimuUtil.getAlreadyProcessed(Wimu.logFileName));
-		// List<String> lstURLDumps = FileUtils.readLines(new
-		// File("dumpsLocation.txt"), "UTF-8");
-		List<String> lstURLDumps = new ArrayList<String>();
-		Set<String> setAllFileURLs = getFileURLs(lstURLDumps);
 
-		setAllFileURLs.addAll(getDumps("lodStatsDatasets.txt"));
+		Set<String> setAllFileURLs = getDumps("md5HDT.txt");
 		setAllFileURLs.removeAll(alreadyProcessed);
 
 		setFileURLs.addAll(setAllFileURLs);
@@ -152,17 +146,17 @@ public class LODStats {
 				long totalTDownload = System.currentTimeMillis() - tDownload;
 				System.out.println("Total TimeDownload(ms): " + totalTDownload);
 			} catch (IOException e) {
-				datasetErrorsJena.put(fileURL,e.getMessage());
+				datasetErrorsJena.put(fileURL, e.getMessage());
 			}
 			System.out.println("Starting to process " + cores + " threads/files. Already processed files: "
 					+ alreadyProcessed.size() + " from " + setAllFileURLs.size());
 
 			long tProcess = System.currentTimeMillis();
 			System.out.println("Parallel processing##");
-			setFiles.parallelStream().forEach(file -> {
-				// for (FileWIMU file : setFiles) {
+			//setFiles.parallelStream().forEach(file -> {
+			for (FileWIMU file : setFiles) {
 				String provenance = file.getDataset();
-				if (processCompressedFile(file, provenance)) {
+				if (processHDT(file)) {
 					synchronized (successFiles) {
 						successFiles.add(provenance);
 					}
@@ -173,15 +167,15 @@ public class LODStats {
 
 				alreadyProcessed.add(provenance);
 
-				// }
-			});
+			}
+			//});
 			long totalTProcess = System.currentTimeMillis() - tProcess;
 			System.out.println("Total TimeProcess(" + cores + " files): " + totalTProcess);
 			System.out.println("mDatatypes.size: " + mDatatypeTriples.size());
 		}
 		System.out.println("Inserting remaining " + mDatatypeTriples.size() + " Datatypes");
 		insertLucene(mDatatypeTriples);
-		generateFile(datasetErrorsJena, "ErrorsJena.csv", true);
+		generateFile(datasetErrorsJena, "ErrorsJena.csv");
 		totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total Time(ms): " + totalTime);
 		System.out.println("countDataTypeTriples: " + countDataTypeTriples);
@@ -198,26 +192,46 @@ public class LODStats {
 		}
 	}
 
-	private static void exitBefore() throws IOException {
-		System.out.println("##################### EXIT BEFORE, just testing\nInserting remaining "
-				+ mDatatypeTriples.size() + " Datatypes");
-		insertLucene(mDatatypeTriples);
-		generateFile(datasetErrorsJena, "ErrorsJena.csv", true);
-		totalTime = System.currentTimeMillis() - start;
-		System.out.println("Total Time(ms): " + totalTime);
-		System.out.println("countDataTypeTriples: " + countDataTypeTriples);
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date();
-		System.out.println("Dump2Lucene...Parallel, finalize at: " + dateFormat.format(date));
-		if (iwriter != null) {
-			iwriter.close();
+	private static boolean processHDT(FileWIMU file) {
+		System.out.println("processing File: " + file.getAbsolutePath());
+		boolean ret = false;
+		ConcurrentHashMap<String, Integer> mDatatypeTriples = new ConcurrentHashMap<String, Integer>();
+		int cDtypes = 0;
+		String uriDataset = null;
+		
+		HDT hdt;
+		try {
+			hdt = HDTManager.mapHDT(file.getAbsolutePath(), null);
+			HDTGraph graph = new HDTGraph(hdt);
+			Model model = new ModelCom(graph);
+			String sparql = "Select * where {?s ?p ?o . filter(isLiteral(?o)) }";
+
+			Query query = QueryFactory.create(sparql);
+
+			QueryExecution qe = QueryExecutionFactory.create(query, model);
+			ResultSet results = qe.execSelect();
+
+			while (results.hasNext()) {
+				QuerySolution thisRow = results.next();
+				uriDataset = thisRow.get("s").toString() + "\t" + file.getDataset();
+				if (mDatatypeTriples.containsKey(uriDataset)) {
+					cDtypes = mDatatypeTriples.get(uriDataset) + 1;
+					mDatatypeTriples.put(uriDataset, cDtypes);
+				} else {
+					mDatatypeTriples.put(uriDataset, 1);
+				}
+				++totalTriples;
+			}
+			qe.close();
+			insertLucene(mDatatypeTriples);
+			System.out.println("Datatype triples: " + totalTriples);
+			ret = true;
+		} catch (Exception e) {
+			ret = false;
+		} finally {
+			
 		}
-		if (ireader != null) {
-			ireader.close();
-		}
-		if (directory != null) {
-			directory.close();
-		}
+		return ret;
 	}
 
 	private static void insertLucene(ConcurrentHashMap<String, Integer> mDatatypeTriples2) throws IOException {
@@ -245,178 +259,13 @@ public class LODStats {
 	private static Set<String> getDumps(String fileName) throws IOException {
 		Set<String> setDumps = Files.lines(Paths.get(fileName)).collect(Collectors.toSet());
 		Set<String> ret = new HashSet<String>();
-		for (String dump : setDumps) {
-			if ((dump.length() > 10) && (!dump.contains("sparql")) && (!dump.endsWith("/"))) {
-				if (isGoodURL(dump)) {
-					ret.add(dump);
-				} else {
-					System.out.println("FAIL: " + dump + " ERROR: Invalid URI, not possible to download the content.");
-				}
-			}
-		}
-		return ret;
-	}
-
-	private static boolean processCompressedFile(FileWIMU file, String dataset) {
-		boolean ret = false;
-		try {
-			FileWIMU fUnzip = null;
-			if (file.getName().endsWith(".bz2"))
-				fUnzip = new FileWIMU("unzip/" + file.getName().replaceAll(".bz2", ""));
-			else if (file.getName().endsWith(".xz"))
-				fUnzip = new FileWIMU("unzip/" + file.getName().replaceAll(".xz", ""));
-			else if (file.getName().endsWith(".zip"))
-				fUnzip = new FileWIMU("unzip/" + file.getName().replaceAll(".zip", ""));
-			else if (file.getName().endsWith(".tar.gz"))
-				fUnzip = new FileWIMU("unzip/" + file.getName().replaceAll(".tar.gz", ""));
-			else
-				return processUnzipRDF(file);
-
-			fUnzip.setDataset(file.getDataset());
-			BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-			FileOutputStream out = new FileOutputStream(fUnzip);
-
-			if (file.getName().endsWith(".bz2")) {
-				BZip2CompressorInputStream bz2In = new BZip2CompressorInputStream(in);
-				synchronized (bz2In) {
-					final byte[] buffer = new byte[8192];
-					int n = 0;
-					while (-1 != (n = bz2In.read(buffer))) {
-						out.write(buffer, 0, n);
-					}
-					out.close();
-					bz2In.close();
-				}
-			} else if (file.getName().endsWith(".xz")) {
-				XZInputStream xzIn = new XZInputStream(in);
-				synchronized (xzIn) {
-					final byte[] buffer = new byte[8192];
-					int n = 0;
-					while (-1 != (n = xzIn.read(buffer))) {
-						out.write(buffer, 0, n);
-					}
-					out.close();
-					xzIn.close();
-				}
-			} else if (file.getName().endsWith(".zip")) {
-				ZipArchiveInputStream zipIn = new ZipArchiveInputStream(in);
-				synchronized (zipIn) {
-					final byte[] buffer = new byte[8192];
-					int n = 0;
-					while (-1 != (n = zipIn.read(buffer))) {
-						out.write(buffer, 0, n);
-					}
-					out.close();
-					zipIn.close();
-				}
-			} else if (file.getName().endsWith(".tar.gz")) {
-				GzipCompressorInputStream gzIn = new GzipCompressorInputStream(in);
-				synchronized (gzIn) {
-					final byte[] buffer = new byte[8192];
-					int n = 0;
-					while (-1 != (n = gzIn.read(buffer))) {
-						out.write(buffer, 0, n);
-					}
-					out.close();
-					gzIn.close();
-				}
-			}
-
-			file.delete();
-
-			if (fUnzip != null)
-				ret = processUnzipRDF(fUnzip);
-		} catch (Exception ex) {
-			ret = false;
-			datasetErrorsJena.put(dataset, ex.getMessage());
-			ex.printStackTrace();
-		}
-		return ret;
-	}
-
-	private static boolean processUnzipRDF(FileWIMU fUnzip) {
-		boolean ret = true;
-		try {
-			StreamRDF reader = new StreamRDF() {
-
-				@Override
-				public void base(String arg0) {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void finish() {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void prefix(String arg0, String arg1) {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void quad(Quad arg0) {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void start() {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void triple(Triple triple) {
-					totalTriples++;
-					if (triple.getObject().isLiteral()) {
-						String uriDataset = triple.getSubject().getURI() + "\t" + fUnzip.getDataset();
-						if (mDatatypeTriples.containsKey(uriDataset)) {
-							int cDtypes = mDatatypeTriples.get(uriDataset) + 1;
-							mDatatypeTriples.put(uriDataset, cDtypes);
-						} else {
-							mDatatypeTriples.put(uriDataset, 1);
-						}
-
-						if (mDatatypeTriples.size() > lim) {
-							long startTime = System.currentTimeMillis();
-							System.out.println("Reach the limit: " + lim + " Inserting to " + luceneDir);
-							try {
-								insertLucene(mDatatypeTriples);
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							long totalT = System.currentTimeMillis() - startTime;
-							System.out.println("Insert Lucene " + countDataTypeTriples
-									+ " DataTypeTriples, in totalTime: " + totalT);
-							System.out.println("totalTriples: " + totalTriples);
-
-							mDatatypeTriples.clear();
-							mDatatypeTriples = new ConcurrentHashMap<String, Integer>();
-						}
-						countDataTypeTriples++;
-					}
-				}
-			};
-			if (fUnzip.getName().endsWith(".tql")) {
-				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NQUADS);
-			} else if (fUnzip.getName().endsWith(".ttl")) {
-				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.TTL);
-			} else if (fUnzip.getName().endsWith(".nt")) {
-				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NT);
-			} else if (fUnzip.getName().endsWith(".nq")) {
-				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NQ);
+		for (String md5 : setDumps) {
+			String dump = "http://download.lodlaundromat.org/" + md5 + "?type=hdt";
+			if (isGoodURL(dump)) {
+				ret.add(dump);
 			} else {
-				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath());
+				System.out.println("FAIL: " + dump + " ERROR: Invalid URI, not possible to download the content.");
 			}
-			fUnzip.delete();
-		} catch (Exception ex) {
-			datasetErrorsJena.put(fUnzip.getDataset(), ex.getMessage());
-			ret = false;
 		}
 		return ret;
 	}
@@ -450,7 +299,7 @@ public class LODStats {
 				System.out.println(count + " : " + sFileURL);
 			} catch (Exception ex) {
 				if (datasetErrorsJena.mappingCount() > lim) {
-					generateFile(datasetErrorsJena, "ErrorsJena_" + totalTriples + ".csv", true);
+					generateFile(datasetErrorsJena, "ErrorsJena_" + totalTriples + ".csv");
 					datasetErrorsJena.clear();
 					datasetErrorsJena = new ConcurrentHashMap<String, String>();
 				}
@@ -476,77 +325,7 @@ public class LODStats {
 		}
 	}
 
-	private static Set<String> getFileURLs(List<String> pURLs) throws SocketException, IOException {
-		Set<String> ret = new HashSet<String>();
-
-		pURLs.forEach(sURL -> {
-			if (sURL.startsWith("ftp")) {
-				try {
-					String s[] = sURL.split("/");
-					String domain = s[2];
-					String path = sURL.substring(sURL.indexOf(domain) + domain.length());
-
-					FTPClient client = new FTPClient();
-					client.connect(domain);
-					client.enterLocalPassiveMode();
-					client.login("anonymous", "");
-					FTPFile[] files = client.listFiles(path);
-					for (FTPFile ftpFile : files) {
-						// ret.add("ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/rdf/"
-						// + ftpFile.getName());
-						String fName = ftpFile.getName();
-						// if (fName.endsWith(".xz"))
-						if (filterFileType(fName))
-							ret.add(sURL + fName);
-					}
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			} else {
-				// String url =
-				// "http://downloads.dbpedia.org/2016-10/core-i18n/en/";
-				try {
-					org.jsoup.nodes.Document doc = Jsoup.connect(sURL).get();
-					for (Element file : doc.select("a")) {
-						String fName = file.attr("href");
-						// if (fName.endsWith(".bz2"))
-						if (filterFileType(fName))
-							ret.add(sURL + fName);
-					}
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
-			}
-		});
-
-		return ret;
-	}
-
-	private static boolean filterFileType(String fName) {
-		boolean ret = false;
-		if (fName.endsWith(".ttl.bz2") || fName.endsWith(".tql.bz2") || fName.endsWith("rdf.xz")
-				|| fName.endsWith(".rdf") || fName.endsWith(".ttl") || fName.endsWith(".tql")
-				|| fName.endsWith(".nquad"))
-			ret = true;
-		return ret;
-	}
-
-	public static void generateFile(Map<String, Integer> maps, String fileName) {
-		File ret = new File("out/" + fileName);
-		System.out.println("Generating file: " + ret.getAbsolutePath());
-		try {
-			PrintWriter writer = new PrintWriter(fileName, "UTF-8");
-			maps.forEach((uriDataset, dTypes) -> {
-				writer.println(uriDataset + " \"" + dTypes + "\"^^<http://www.w3.org/2001/XMLSchema#int> .");
-			});
-			writer.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		System.out.println("File generated: " + ret.getAbsolutePath());
-	}
-
-	public static File generateFile(Map<String, String> endPointErrors, String fileName, boolean b) {
+	public static File generateFile(Map<String, String> endPointErrors, String fileName) {
 		File ret = new File("out/" + fileName);
 		try {
 			PrintWriter writer = new PrintWriter(fileName, "UTF-8");

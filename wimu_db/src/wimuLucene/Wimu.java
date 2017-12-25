@@ -1,15 +1,15 @@
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.jena.atlas.logging.LogCtl;
-import org.apache.lucene.queryparser.classic.ParseException;
 
 public class Wimu {
 	public static String logFileName = null;
-	public static void main(String args[]) throws IOException, ClassNotFoundException, SQLException, ParseException {
+	public static void main(String args[]) throws IOException, ClassNotFoundException, SQLException, ParseException, org.apache.lucene.queryparser.classic.ParseException {
 
 		LogCtl.setLog4j("log4j.properties");
 		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
@@ -41,21 +41,20 @@ public class Wimu {
 
 	public static void create(String args[]) throws IOException, ClassNotFoundException, SQLException {
 		if (args.length > 3){
-			for (int i = 0; i < args.length; i++) {
-				if(args[i].equals(">")){
-					logFileName = args[i+1];
-					System.out.println("logFileName: " + logFileName);
-					break;
-				}
-			}
+			logFileName = args[4];
+			System.out.println("logFileName: " + logFileName);
+
 			if (args[3].equals("dbpedia")) {
 				System.out.println("Dumps from DBpedia");
 				DBpedia.create(args[1], args[2]);
 			} else if (args[3].equals("dumps")) {
 				System.out.println("All dumps from LODstats");
 				LODStats.create(args[1], args[2]);
-			}else if (args[3].equals("endpoints")) {
-				System.out.println("All EndPoints from LODstats + dbpedia");
+			} else if (args[3].equals("hdt")) {
+				System.out.println("All HDT files from LODLaundromat");
+				HDTFiles.create(args[1], args[2]);
+			} else if (args[3].equals("endpoints")) {
+				System.out.println("All EndPoints from LODstats");
 				Endpoint2Lucene.create(args[2],true); 
 			} else if (args[3].equals("all")) {
 				System.out.println("Everything DBpedia + LODStats (Dumps + Endpoints)");
@@ -68,13 +67,13 @@ public class Wimu {
 			} else {
 				System.err.println("Wrong parameters ! " + args[3]);
 				System.out.println("search <uri> <num_max_results> <lucenedir_1,lucenedir_n>");
-				System.out.println("create <dump_dir> <lucene_name_dir> <dbpedia / lodstats / endpoints / all>");
+				System.out.println("create <dump_dir> <lucene_name_dir> <dbpedia / lodstats / endpoints / all> <logFileName>");
 				System.exit(0);
 			}
 		}else {
 			System.err.println("Wrong parameters !");
 			System.out.println("search <uri> <num_max_results> <lucenedir_1,lucenedir_n>");
-			System.out.println("create <dump_dir> <lucene_name_dir> <dbpedia / lodstats / endpoints / all>");
+			System.out.println("create <dump_dir> <lucene_name_dir> <dbpedia / lodstats / endpoints / all> <logFileName>");
 			System.exit(0);
 		}
 	}

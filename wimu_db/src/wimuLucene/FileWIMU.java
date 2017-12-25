@@ -16,9 +16,6 @@ public class FileWIMU extends File {
 		super(fName);
 	}
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 }

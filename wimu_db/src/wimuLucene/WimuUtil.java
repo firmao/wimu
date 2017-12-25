@@ -9,19 +9,21 @@ import org.apache.commons.io.FileUtils;
 public class WimuUtil {
 	public static Set<String> getAlreadyProcessed(String logFileName) throws IOException {
 		Set<String> setReturn = new HashSet<String>();
+		if (logFileName == null)
+			return setReturn;
 		File f = new File(logFileName);
-		if(!f.exists()){
+		if (!f.exists()) {
 			System.out.println("File: " + logFileName + " does not exist yet, creating now.");
 			return setReturn;
 		}
-			
+
 		List<String> lstLog = FileUtils.readLines(f, "UTF-8");
 		String fName = null;
 		for (String line : lstLog) {
-			if(line.startsWith("SUCESS: ")){
+			if (line.startsWith("SUCESS: ")) {
 				fName = line.split("SUCESS: ")[1];
 				setReturn.add(fName);
-			}else if(line.startsWith("FAIL: ")){
+			} else if (line.startsWith("FAIL: ")) {
 				fName = line.split("FAIL: ")[1];
 				fName = fName.split(" ERROR:")[0];
 				setReturn.add(fName);

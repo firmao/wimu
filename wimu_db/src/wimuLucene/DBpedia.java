@@ -146,8 +146,7 @@ public class DBpedia {
 				long totalTDownload = System.currentTimeMillis() - tDownload;
 				System.out.println("Total TimeDownload(ms): " + totalTDownload);
 			} catch (IOException e) {
-				errorFiles.add(fileURL);
-				e.printStackTrace();
+				datasetErrorsJena.put(fileURL,e.getMessage());
 			}
 			System.out.println("Starting to process " + cores + " threads/files. Already processed files: "
 					+ alreadyProcessed.size() + " from " + setAllFileURLs.size());
