@@ -28,6 +28,12 @@ public class Find extends HttpServlet {
 	 */
 	public Find() {
 		super();
+		try {
+			HDTQueryMan.loadFileMap("md5HDT.csv");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -131,11 +137,13 @@ public class Find extends HttpServlet {
 			dirDumps = request.getSession().getAttribute("dirDumps").toString();
 		}
 		
-		Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
+		//Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
 		Set<String> sDirs = new HashSet<String>();
+		sDirs.add(dirHDT);
 		sDirs.add(dirDumps);
 		sDirs.add(dirEndpoints);
-		result.putAll(LuceneSearch.search(uri, 1000, sDirs));
+		//result.putAll(LuceneUtil.search(uri, 1000, sDirs));
+		Map<String, Integer> result = LuceneUtil.search(uri, 1000, sDirs);
 		
 		return result;
 	}
@@ -181,9 +189,17 @@ public class Find extends HttpServlet {
 			result.entrySet().forEach(elem -> {
 				String dataset = elem.getKey();
 				
-				String md5 = dataset.substring(0, dataset.indexOf("."));
-				String dsName = HDTQueryMan.md5Names.get(md5);
-				dataset = (dsName != null) ? dsName : dataset;
+				String md5 = "";
+				String dsName = null;
+				//if((dataset != null) && (dataset.length() > 40)){
+				//String md5 = dataset.substring(0, dataset.indexOf("."));
+				try{
+					md5 = dataset.substring(34, dataset.indexOf("?"));
+					dsName = HDTQueryMan.md5Names.get(md5);
+					dataset = (dsName != null) ? dsName : dataset;
+				}catch(Exception ex){
+					System.err.println(ex.getMessage());
+				}
 				
 				String urlDataset = null;
 				//String urlDataset = "http://gaia.infor.uva.es/hdt/" + dataset + ".gz";
