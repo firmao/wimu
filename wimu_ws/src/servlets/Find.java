@@ -1,11 +1,16 @@
 package servlets;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -28,6 +33,12 @@ public class Find extends HttpServlet {
 	 */
 	public Find() {
 		super();
+	}
+	
+	@Override
+	public void init() throws ServletException {
+		// TODO Auto-generated method stub
+		super.init();
 		try {
 			HDTQueryMan.loadFileMap("md5HDT.csv");
 		} catch (IOException e) {
@@ -139,7 +150,11 @@ public class Find extends HttpServlet {
 		
 		//Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
 		Set<String> sDirs = new HashSet<String>();
-		sDirs.add(dirHDT);
+		String sHDT [] = dirHDT.split(",");
+		for (String dHDT : sHDT) {
+			sDirs.add(dHDT);
+		}
+		//sDirs.add(dirHDT);
 		sDirs.add(dirDumps);
 		sDirs.add(dirEndpoints);
 		//result.putAll(LuceneUtil.search(uri, 1000, sDirs));
@@ -179,13 +194,25 @@ public class Find extends HttpServlet {
 		request.getSession().setAttribute("urihdt", uri);
 		long start = System.currentTimeMillis();
 		
-		Map<String, Integer> result = findDatasets(uri, request);
-
+		Map<String, Integer> result1 = findDatasets(uri, request);
+		
+//		Map<String, Integer> result = 
+//			     result1.entrySet().stream()
+//			    .sorted(Entry.comparingByValue())
+//			    .collect(Collectors.toMap(Entry::getKey, Entry::getValue,
+//			                              (e1, e2) -> e1, LinkedHashMap::new));
+		
+		Map<String, Integer> result = sortByComparator(result1, false);
+		
 		long totalTime = System.currentTimeMillis() - start;
 		
 		if ((result != null) && (result.size() > 0)) {
 			response.getOutputStream().println(
 					"<table border='1'> " + "<tr> " + "<th>Dataset</th> " + "<th>Count DataType</th> " + "</tr>");
+			//response.getOutputStream().println("<script src=\"https://www.w3schools.com/lib/w3.js\"></script>");
+//			response.getOutputStream().println(
+//					"<table id=\"myTable\" border='1'> " + "<tr> " + "<th onclick=\"w3.sortHTML('#myTable', '.item', 'td:nth-child(1)')\" style=\"cursor:pointer\">Dataset</th> "
+//							+ "<th onclick=\"w3.sortHTML('#myTable', '.item', 'td:nth-child(2)')\" style=\"cursor:pointer\">Country</th> " + "</tr>");
 			result.entrySet().forEach(elem -> {
 				String dataset = elem.getKey();
 				
@@ -198,7 +225,7 @@ public class Find extends HttpServlet {
 					dsName = HDTQueryMan.md5Names.get(md5);
 					dataset = (dsName != null) ? dsName : dataset;
 				}catch(Exception ex){
-					System.err.println(ex.getMessage());
+					System.err.println(dataset + " - " +  ex.getMessage());
 				}
 				
 				String urlDataset = null;
@@ -215,6 +242,8 @@ public class Find extends HttpServlet {
 						
 				int dType = elem.getValue();
 				try {
+//					response.getOutputStream()
+//					.println("<tr class=\"item\"> " + "<td><a href='"+ urlDataset +"'>" + dataset + "</a></td> " + "<td>" + dType + "</td> " + "</tr>");
 					response.getOutputStream()
 					.println("<tr> " + "<td><a href='"+ urlDataset +"'>" + dataset + "</a></td> " + "<td>" + dType + "</td> " + "</tr>");
 				} catch (IOException e) {
@@ -330,5 +359,38 @@ public class Find extends HttpServlet {
 		});
 		
 	}
+	
+	private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, final boolean order)
+    {
+
+        List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
+
+        // Sorting the list based on values
+        Collections.sort(list, new Comparator<Entry<String, Integer>>()
+        {
+            public int compare(Entry<String, Integer> o1,
+                    Entry<String, Integer> o2)
+            {
+                if (order)
+                {
+                    return o1.getValue().compareTo(o2.getValue());
+                }
+                else
+                {
+                    return o2.getValue().compareTo(o1.getValue());
+
+                }
+            }
+        });
+
+        // Maintaining insertion order with the help of LinkedList
+        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
+        for (Entry<String, Integer> entry : list)
+        {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
+    }
 
 }
