@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -48,13 +49,14 @@ public class Endpoint2Lucene {
 
 	public static long start = 0;
 	public static long totalTime = 0;
-	public static long lim = 100000;
+	public static long lim = 100000000;
 
-	public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
+	public static void main(String[] args) throws Exception {
 		LogCtl.setLog4j("log4j.properties");
 		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
 		start = System.currentTimeMillis();
-		processEndPoints();
+		//processEndPoints();
+		long totalTriples = extract("http://live.dbpedia.org/sparql", "lucene_");
 		totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total time: " + totalTime + " TotalTriples: " + totalTriples);
 	}
@@ -101,7 +103,9 @@ public class Endpoint2Lucene {
 		endPoints.removeAll(WimuUtil.getAlreadyProcessed(Wimu.logFileName));
 		endPoints.parallelStream().forEach(endPoint -> {
 			try {
-				totalTriples += extract(endPoint, 9999);
+				//totalTriples += extract(endPoint, 9999);
+				Random random = new Random();
+				totalTriples += extract(endPoint, "lucene"+random.nextInt(10000)+"_");
 				System.out.println("SUCESS: " + endPoint);
 			} catch (Exception e) {
 				mEndPointError.put(endPoint, e.getMessage());
@@ -116,10 +120,102 @@ public class Endpoint2Lucene {
 		long start = System.currentTimeMillis();
 		// String endPoint = "http://dbpedia.org/sparql";
 		String endPoint = args[0];
-		int limit = Integer.parseInt(args[1]);
-		long totalTriples = extract(endPoint, limit);
+		
 		long totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total time: " + totalTime + " TotalTriples: " + totalTriples);
+	}
+
+	private static synchronized long extract(String endPoint, String luceneDir) throws Exception {
+		File indexDirectory = new File(luceneDir);
+		indexDirectory.mkdir();
+		directory = new MMapDirectory(indexDirectory);
+		System.out.println("Created Lucene dir: " + indexDirectory.getAbsolutePath());
+		urlAnalyzer = new SimpleAnalyzer(LUCENE_VERSION);
+		Map<String, Analyzer> mapping = new HashMap<String, Analyzer>();
+		mapping.put("uri", urlAnalyzer);
+		mapping.put("dataset_dtype", urlAnalyzer);
+		PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
+		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
+		iwriter = new IndexWriter(directory, config);
+		iwriter.commit();
+		
+		long countOffset = 0;
+		long count = 0;
+		final long offsetSize = 10000;
+		long offset = 0;
+		do {
+			String sparqlQueryString = "SELECT ?s (count(?o) as ?c) WHERE { ?s ?p ?o . FILTER(isliteral(?o)) } group by ?s offset " + offset
+					+ " limit " + offsetSize;
+
+			Query query = QueryFactory.create(sparqlQueryString);
+
+			int dType = 0;
+			String uri = null;
+			QueryExecution qexec = QueryExecutionFactory.sparqlService(endPoint, query);
+			try {
+				// qexec.setTimeout(300000); 5 minutes timeout
+				ResultSet results = qexec.execSelect();
+				if(!results.hasNext()){
+					System.out.println("Stoped on offset: " + offset + ", there is no more data from: " + endPoint);
+					break;
+				}
+				for (; results.hasNext();) {
+					try {
+						QuerySolution soln = results.nextSolution();
+						dType = soln.get("?c").asLiteral().getInt();
+						uri = soln.get("?s").toString();
+						try {
+							Document doc = new Document();
+							doc.add(new StringField("uri", uri, Store.YES));
+							doc.add(new StringField("dataset_dtype", endPoint + "\t" + dType, Store.YES));
+							iwriter.addDocument(doc);
+						} catch (Exception ex) {
+							System.out.println("Endpoint: "+endPoint+" Error: " + ex.getMessage());
+						}
+						totalTriples++;
+					} catch (Exception e) {
+						System.out.println("Endpoint: "+endPoint+" Error: " + e.getMessage());
+					}
+				}
+			} catch (Exception en) {
+				mEndPointError.put(endPoint, en.getMessage());
+				System.out.println("Endpoint: "+endPoint+" Error: " + en.getMessage());
+				break;
+			} finally {
+				qexec.close();
+			}
+			
+			System.out.println("offset: " + countOffset);
+			++countOffset;
+			++count;
+			if(count > 999){
+				if (iwriter != null) {
+					iwriter.close();
+				}
+				if (directory != null) {
+					directory.close();
+				}
+				
+				File fDir = new File(luceneDir + "_" + countOffset);
+				fDir.mkdir();
+				directory = new MMapDirectory(fDir);
+				System.out.println("TotaTriples: " + totalTriples);
+				System.out.println("Created Lucene dir: " + fDir.getAbsolutePath());
+				iwriter = new IndexWriter(directory, config);
+				iwriter.commit();
+				count = 0;
+			}
+			offset += offsetSize;
+		} while (true);
+
+		if (iwriter != null) {
+			iwriter.close();
+		}
+		if (directory != null) {
+			directory.close();
+		}
+		
+		return totalTriples;
 	}
 
 	private static synchronized long extract(String endPoint, int limit) throws Exception {
@@ -149,6 +245,10 @@ public class Endpoint2Lucene {
 			try {
 				// qexec.setTimeout(300000); 5 minutes timeout
 				ResultSet results = qexec.execSelect();
+				if(!results.hasNext()){
+					System.out.println("Stoped on offset: " + offset + ", there is no more data from: " + endPoint);
+					break;
+				}
 				for (; results.hasNext();) {
 					try {
 						QuerySolution soln = results.nextSolution();

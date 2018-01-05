@@ -447,10 +447,10 @@ public class LODStats {
 		// setAllFileNames.removeAll(alreadyProcessed);
 		// setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
 		System.out.println("Download Files_");
-		for (String sFileURL : setFileServer) {
-			if (count == cores)
-				break;
-			// setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
+//		for (String sFileURL : setFileServer) {
+//			if (count == cores)
+//				break;
+		setFileServer.parallelStream().limit(cores).forEach(sFileURL -> {
 			// setFileServer.stream().limit(cores).forEach(sFileURL -> {
 			try {
 				System.out.println("Start download: " + sFileURL);
@@ -482,8 +482,8 @@ public class LODStats {
 				System.out.println("FAIL: " + sFileURL + " ERROR: " + ex.getMessage());
 				// ex.printStackTrace();
 			}
-		}
-		// });
+		//}
+		});
 		return ret;
 	}
 
