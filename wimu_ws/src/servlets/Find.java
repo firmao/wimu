@@ -84,14 +84,15 @@ public class Find extends HttpServlet {
 																// QueryString.
 				request.getSession().setAttribute("uri", uri);
 				
-				Map<String, Integer> result = findDatasets(uri, request);
+				//Map<String, Integer> result = findDatasets(uri, request);
+				Map<String, Integer> result = sortByComparator(findDatasets(uri, request), false);
 				
 				if ((result != null) && (result.size() > 0)) {
 					String json = "[";
 					for (Map.Entry<String, Integer> elem : result.entrySet()) {
 						String endPoint = elem.getKey();
 						int dType = elem.getValue();
-						json += ",{\"EndPoint\":\"" + endPoint + "\",\"CountDataType\":\"" + dType + "\"}";
+						json += ",{\"dataset\":\"" + endPoint + "\",\"CountDataType\":\"" + dType + "\"}";
 					}
 					json = json.replaceFirst(",", "");
 					json += "]";
@@ -135,17 +136,22 @@ public class Find extends HttpServlet {
 	}
 
 	private Map<String, Integer> findDatasets(String uri, HttpServletRequest request) throws IOException, ParseException {
-		String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
-		String dirEndpoints = System.getProperty("user.home") + "/endpoints";
-		String dirDumps = System.getProperty("user.home") + "/dumps";
-		if(request.getSession().getAttribute("dirHDT") != null){
-			dirHDT = request.getSession().getAttribute("dirHDT").toString();
+		
+		String dirHDT = null;
+		String dirEndpoints = null;
+		String dirDumps = null;
+		//if(request.getSession().getAttribute("dirHDT") != null){
+		if(System.getProperty("dirHDT") != null){
+			//dirHDT = request.getSession().getAttribute("dirHDT").toString();
+			dirHDT = System.getProperty("dirHDT");
 		}
-		if(request.getSession().getAttribute("dirEndpoints") != null){
-			dirEndpoints = request.getSession().getAttribute("dirEndpoints").toString();
+		if(System.getProperty("dirEndpoints") != null){
+			//dirEndpoints = request.getSession().getAttribute("dirEndpoints").toString();
+			dirEndpoints = System.getProperty("dirEndpoints");
 		}
-		if(request.getSession().getAttribute("dirDumps") != null){
-			dirDumps = request.getSession().getAttribute("dirDumps").toString();
+		if(System.getProperty("dirDumps") != null){
+			//dirDumps = request.getSession().getAttribute("dirDumps").toString();
+			dirDumps = System.getProperty("dirDumps");
 		}
 		
 		//Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
@@ -208,24 +214,29 @@ public class Find extends HttpServlet {
 		
 		if ((result != null) && (result.size() > 0)) {
 			response.getOutputStream().println(
-					"<table border='1'> " + "<tr> " + "<th>Dataset</th> " + "<th>Count DataType</th> " + "</tr>");
+					"<table border='1'> <tr> <th>Dataset</th> <th>Count DataType</th> <th>HDT</th> </tr>");
 			//response.getOutputStream().println("<script src=\"https://www.w3schools.com/lib/w3.js\"></script>");
 //			response.getOutputStream().println(
 //					"<table id=\"myTable\" border='1'> " + "<tr> " + "<th onclick=\"w3.sortHTML('#myTable', '.item', 'td:nth-child(1)')\" style=\"cursor:pointer\">Dataset</th> "
 //							+ "<th onclick=\"w3.sortHTML('#myTable', '.item', 'td:nth-child(2)')\" style=\"cursor:pointer\">Country</th> " + "</tr>");
+			//result.entrySet().stream().limit(5).forEach(elem -> {
 			result.entrySet().forEach(elem -> {
 				String dataset = elem.getKey();
 				
 				String md5 = "";
 				String dsName = null;
+				String dsHDT = "#";
+				String imgHDT = "-";
 				//if((dataset != null) && (dataset.length() > 40)){
 				//String md5 = dataset.substring(0, dataset.indexOf("."));
 				try{
 					md5 = dataset.substring(34, dataset.indexOf("?"));
 					dsName = HDTQueryMan.md5Names.get(md5);
+					dsHDT = dataset;
+					imgHDT = "<img src=\"https://dataweb.infor.uva.es/projects/hdt-mr/files/logo-hdt-75x75.png\"alt=\"Donwload the HDT file.\" width=\"30\" height=\"30\">";
 					dataset = (dsName != null) ? dsName : dataset;
 				}catch(Exception ex){
-					System.err.println(dataset + " - " +  ex.getMessage());
+					//System.err.println(dataset + " -NON MD5HDT- ");
 				}
 				
 				String urlDataset = null;
@@ -245,13 +256,14 @@ public class Find extends HttpServlet {
 //					response.getOutputStream()
 //					.println("<tr class=\"item\"> " + "<td><a href='"+ urlDataset +"'>" + dataset + "</a></td> " + "<td>" + dType + "</td> " + "</tr>");
 					response.getOutputStream()
-					.println("<tr> " + "<td><a href='"+ urlDataset +"'>" + dataset + "</a></td> " + "<td>" + dType + "</td> " + "</tr>");
+					.println("<tr> " + "<td><a href='"+ urlDataset +"'>" + dataset + "</a></td> " + "<td>" + dType + "</td> <td><a href='"+ dsHDT +"'>"+ imgHDT +"</a></td></tr>");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			});
 			response.getOutputStream().println("</table>");
-			response.getOutputStream().println("<h3>URI: " + uri + "</h3>");
+			response.getOutputStream().println("<h3>URI: " + uri + "</h3> <br>Top "+ ((result1.size() < 5) ? result1.size() : 5) +" from "+ result1.size() +" datasets.");
+			//response.getOutputStream().println("<h3>Global: " + System.getProperty("nada") + "</h3>");
 		} else {
 			response.getOutputStream().println("<h1>NOTHING !</h1>");
 		}
@@ -383,11 +395,14 @@ public class Find extends HttpServlet {
             }
         });
 
+        int count = 0;
         // Maintaining insertion order with the help of LinkedList
         Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
         for (Entry<String, Integer> entry : list)
         {
+        	if(count > 4) break;
             sortedMap.put(entry.getKey(), entry.getValue());
+            ++count;
         }
 
         return sortedMap;
