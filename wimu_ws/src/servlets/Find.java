@@ -1,6 +1,9 @@
 package servlets;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,6 +23,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.jena.atlas.json.JsonObject;
 import org.apache.lucene.queryparser.classic.ParseException;
 
 /**
@@ -85,7 +90,7 @@ public class Find extends HttpServlet {
 				request.getSession().setAttribute("uri", uri);
 				
 				//Map<String, Integer> result = findDatasets(uri, request);
-				Map<String, Integer> result = sortByComparator(findDatasets(uri, request), false);
+				Map<String, Integer> result = LuceneUtil.sortByComparator(findDatasets(uri, request), false, 5);
 				
 				if ((result != null) && (result.size() > 0)) {
 					String json = "[";
@@ -103,10 +108,8 @@ public class Find extends HttpServlet {
 				// response.getWriter().write(sameas.getSameAsURI(request.getParameter("uri"),true));
 			} else if (request.getParameter("uris") != null) {
 				findURIS(request, response);
-			} else if (request.getParameter("endpoint") != null) {
-				findURIS(request, response);
-			} else if (request.getParameter("SQL") != null) {
-				findSQL(request, response);
+			} else if (request.getParameter("link") != null) {
+				findLinklion(request, response);
 			} else if (request.getParameter("uri1") != null) {
 				findWeb(request, response);
 			} else if (request.getParameter("urihdt") != null) {
@@ -208,7 +211,7 @@ public class Find extends HttpServlet {
 //			    .collect(Collectors.toMap(Entry::getKey, Entry::getValue,
 //			                              (e1, e2) -> e1, LinkedHashMap::new));
 		
-		Map<String, Integer> result = sortByComparator(result1, false);
+		Map<String, Integer> result = LuceneUtil.sortByComparator(result1, false, 5);
 		
 		long totalTime = System.currentTimeMillis() - start;
 		
@@ -372,40 +375,39 @@ public class Find extends HttpServlet {
 		
 	}
 	
-	private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, final boolean order)
-    {
+	private void findLinklion(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String link = request.getParameter("link");
+		request.getSession().setAttribute("link", link);
+		
+		URL url = new URL(link);
+		File fLink = new File(url.getFile());
+		FileUtils.copyURLToFile(new URL(link), fLink);
+		
+		String dirHDT = null;
+		String dirEndpoints = null;
+		String dirDumps = null;
+		if(System.getProperty("dirHDT") != null){
+			dirHDT = System.getProperty("dirHDT");
+		}
+		if(System.getProperty("dirEndpoints") != null){
+			dirEndpoints = System.getProperty("dirEndpoints");
+		}
+		if(System.getProperty("dirDumps") != null){
+			dirDumps = System.getProperty("dirDumps");
+		}
+		
+		Set<String> sDirs = new HashSet<String>();
+		String sHDT [] = dirHDT.split(",");
+		for (String dHDT : sHDT) {
+			sDirs.add(dHDT);
+		}
 
-        List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
+		sDirs.add(dirDumps);
+		sDirs.add(dirEndpoints);
 
-        // Sorting the list based on values
-        Collections.sort(list, new Comparator<Entry<String, Integer>>()
-        {
-            public int compare(Entry<String, Integer> o1,
-                    Entry<String, Integer> o2)
-            {
-                if (order)
-                {
-                    return o1.getValue().compareTo(o2.getValue());
-                }
-                else
-                {
-                    return o2.getValue().compareTo(o1.getValue());
-
-                }
-            }
-        });
-
-        int count = 0;
-        // Maintaining insertion order with the help of LinkedList
-        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
-        for (Entry<String, Integer> entry : list)
-        {
-        	if(count > 4) break;
-            sortedMap.put(entry.getKey(), entry.getValue());
-            ++count;
-        }
-
-        return sortedMap;
-    }
-
+		Set<WIMUri> results = LuceneUtil.search(fLink, 1000, sDirs);
+			
+		String json = LuceneUtil.set2Json(results);
+		response.getOutputStream().println(json);
+	}
 }

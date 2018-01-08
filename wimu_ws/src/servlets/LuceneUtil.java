@@ -5,12 +5,23 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.jena.atlas.json.JsonArray;
+import org.apache.jena.atlas.json.JsonException;
+import org.apache.jena.atlas.json.JsonObject;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
@@ -19,6 +30,10 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.impl.ModelCom;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.system.StreamRDF;
+import org.apache.jena.sparql.core.Quad;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -241,4 +256,149 @@ public class LuceneUtil {
 		}
 		return mResults;
 	}
+
+	public static Set<WIMUri> search(File fLink, int maxResults, Set<String> dirs) {
+		Set<WIMUri> ret = new HashSet<WIMUri>();
+		
+		try {
+			StreamRDF reader = new StreamRDF() {
+
+				@Override
+				public void base(String arg0) {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void finish() {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void prefix(String arg0, String arg1) {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void quad(Quad arg0) {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void start() {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public synchronized void triple(Triple triple) {
+					String source = triple.getSubject().toString();
+					String target = triple.getObject().toString();
+					WIMUri wURI = new WIMUri(source,target);
+					try {
+						Map<String, Integer> mSource = sortByComparator(search(source, maxResults, dirs),false,1);
+						Map<String, Integer> mTarget = sortByComparator(search(target, maxResults, dirs),false,1);
+						String datasetS = mSource.keySet().iterator().next(); 
+						String datasetT = mSource.keySet().iterator().next();
+						
+						try{
+							wURI.setHdtS(HDTQueryMan.md5Names.get(datasetS.substring(34, datasetS.indexOf("?"))));
+						}catch(Exception ex){
+							wURI.setDatasetS(datasetS);
+						}
+						try{
+							wURI.setHdtT(HDTQueryMan.md5Names.get(datasetT.substring(34, datasetT.indexOf("?"))));
+						}catch(Exception ex){
+							wURI.setDatasetT(datasetT);
+						}
+						wURI.setcDatatypesS(mSource.values().iterator().next().intValue());
+						wURI.setcDatatypesT(mTarget.values().iterator().next().intValue());
+						ret.add(wURI);
+					} catch (IOException | ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			};
+			if (fLink.getName().endsWith(".tql")) {
+				RDFDataMgr.parse(reader, fLink.getAbsolutePath(), Lang.NQUADS);
+			} else if (fLink.getName().endsWith(".ttl")) {
+				RDFDataMgr.parse(reader, fLink.getAbsolutePath(), Lang.TTL);
+			} else if (fLink.getName().endsWith(".nt")) {
+				RDFDataMgr.parse(reader, fLink.getAbsolutePath(), Lang.NT);
+			} else if (fLink.getName().endsWith(".nq")) {
+				RDFDataMgr.parse(reader, fLink.getAbsolutePath(), Lang.NQ);
+			} else {
+				RDFDataMgr.parse(reader, fLink.getAbsolutePath());
+			}
+			fLink.delete();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return ret;
+	}
+	
+	public static String set2Json(Set<WIMUri> setWUri) {
+		JsonObject json = new JsonObject();
+		JsonObject tempj = new JsonObject();
+        JsonArray jArr = new JsonArray();
+        try {
+            for (WIMUri wURI : setWUri) {
+                if (wURI != null) {
+                    tempj = new JsonObject();
+                    tempj.put("uriS", wURI.getUriS());
+                    tempj.put("datasetS", wURI.getDatasetS());
+                    tempj.put("hdtS", wURI.getHdtS());
+                    tempj.put("cDatatypesS", wURI.getcDatatypesS());
+                    tempj.put("uriT", wURI.getUriT());
+                    tempj.put("datasetT", wURI.getDatasetT());
+                    tempj.put("hdtT", wURI.getHdtT());
+                    tempj.put("cDatatypesT", wURI.getcDatatypesT());
+                    jArr.add(tempj);
+                }
+            }
+            json.put("root", jArr);
+        } catch (JsonException e) {
+            //
+        }
+        return json.toString();
+    }
+	
+	public static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, final boolean order, int top)
+    {
+        List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
+
+        // Sorting the list based on values
+        Collections.sort(list, new Comparator<Entry<String, Integer>>()
+        {
+            public int compare(Entry<String, Integer> o1,
+                    Entry<String, Integer> o2)
+            {
+                if (order)
+                {
+                    return o1.getValue().compareTo(o2.getValue());
+                }
+                else
+                {
+                    return o2.getValue().compareTo(o1.getValue());
+
+                }
+            }
+        });
+
+        int count = 0;
+        // Maintaining insertion order with the help of LinkedList
+        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
+        for (Entry<String, Integer> entry : list)
+        {
+        	if(count > (top-1)) break;
+            sortedMap.put(entry.getKey(), entry.getValue());
+            ++count;
+        }
+
+        return sortedMap;
+    }
 }
