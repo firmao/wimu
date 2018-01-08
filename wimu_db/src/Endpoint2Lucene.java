@@ -38,51 +38,37 @@ public class Endpoint2Lucene {
 	static ConcurrentHashMap<String, String> mEndPointError = new ConcurrentHashMap<String, String>();
 
 	// Lucene
-	public static final String N_TRIPLES = "NTriples";
-	public static final String TTL = "ttl";
-	public static final String TSV = "tsv";
 	public static final Version LUCENE_VERSION = Version.LUCENE_44;
 	private static Analyzer urlAnalyzer;
 	private static IndexWriter iwriter;
 	private static MMapDirectory directory;
-	private static String luceneDir;
 
 	public static long start = 0;
+	public static long start2 = 0;
+	public static long startEndpoint = 0;
 	public static long totalTime = 0;
-	public static long lim = 100000000;
+	public static long countDir = 0;
+	public static final long lim = 100000000;
+	public static final long oneDay = 86400000;
+    public static final long oneHour = 3600000;
 
 	public static void main(String[] args) throws Exception {
 		LogCtl.setLog4j("log4j.properties");
 		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
 		start = System.currentTimeMillis();
 		//processEndPoints();
-		long totalTriples = extract("http://live.dbpedia.org/sparql", "lucene_");
+		long totalTriples = extract("http://live.dbpedia.org/sparql");
 		totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total time: " + totalTime + " TotalTriples: " + totalTriples);
 	}
 
-	public static void create(String pLuceneDir, boolean forceSameDir) throws IOException {
-		luceneDir = pLuceneDir;
-		File indexDirectory = new File(luceneDir);
-		if (!forceSameDir)
-			indexDirectory.mkdir();
-		directory = new MMapDirectory(indexDirectory);
-		System.out.println("Created Lucene dir: " + indexDirectory.getAbsolutePath());
-		urlAnalyzer = new SimpleAnalyzer(LUCENE_VERSION);
-		Map<String, Analyzer> mapping = new HashMap<String, Analyzer>();
-		mapping.put("uri", urlAnalyzer);
-		mapping.put("dataset_dtype", urlAnalyzer);
-		PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
-		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
-		iwriter = new IndexWriter(directory, config);
-		// if(!forceSameDir) iwriter.deleteAll();
-		iwriter.commit();
-
+	public static void create(String pLuceneDir) throws IOException {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
 		System.out.println("EndPoint2Lucene..., starting: " + dateFormat.format(date));
 
 		start = System.currentTimeMillis();
+		start2 = System.currentTimeMillis();
 		processEndPoints();
 		totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total time: " + totalTime + " TotalTriples: " + totalTriples);
@@ -99,16 +85,28 @@ public class Endpoint2Lucene {
 	}
 
 	private static void processEndPoints() throws IOException {
+		++countDir;
+		File indexDirectory = new File("luceneDir_" + countDir);
+		indexDirectory.mkdir();
+		directory = new MMapDirectory(indexDirectory);
+		System.out.println("Created Lucene dir: " + indexDirectory.getAbsolutePath());
+		urlAnalyzer = new SimpleAnalyzer(LUCENE_VERSION);
+		Map<String, Analyzer> mapping = new HashMap<String, Analyzer>();
+		mapping.put("uri", urlAnalyzer);
+		mapping.put("dataset_dtype", urlAnalyzer);
+		PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
+		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
+		iwriter = new IndexWriter(directory, config);
+		iwriter.commit();
+		
 		Set<String> endPoints = Files.lines(Paths.get("GoodEndPoints.txt")).collect(Collectors.toSet());
 		endPoints.removeAll(WimuUtil.getAlreadyProcessed(Wimu.logFileName));
 		endPoints.parallelStream().forEach(endPoint -> {
 			try {
 				//totalTriples += extract(endPoint, 9999);
-				Random random = new Random();
-				totalTriples += extract(endPoint, "lucene"+random.nextInt(10000)+"_");
+				totalTriples += extract(endPoint);
 				System.out.println("SUCESS: " + endPoint);
 			} catch (Exception e) {
-				mEndPointError.put(endPoint, e.getMessage());
 				System.out.println("FAIL: " + endPoint + " ERROR: " + e.getMessage());
 				// e.printStackTrace();
 			}
@@ -125,25 +123,20 @@ public class Endpoint2Lucene {
 		System.out.println("Total time: " + totalTime + " TotalTriples: " + totalTriples);
 	}
 
-	private static synchronized long extract(String endPoint, String luceneDir) throws Exception {
-		File indexDirectory = new File(luceneDir);
-		indexDirectory.mkdir();
-		directory = new MMapDirectory(indexDirectory);
-		System.out.println("Created Lucene dir: " + indexDirectory.getAbsolutePath());
-		urlAnalyzer = new SimpleAnalyzer(LUCENE_VERSION);
-		Map<String, Analyzer> mapping = new HashMap<String, Analyzer>();
-		mapping.put("uri", urlAnalyzer);
-		mapping.put("dataset_dtype", urlAnalyzer);
-		PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
-		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
-		iwriter = new IndexWriter(directory, config);
-		iwriter.commit();
-		
+	private static synchronized long extract(String endPoint) throws Exception {
 		long countOffset = 0;
-		long count = 0;
 		final long offsetSize = 10000;
 		long offset = 0;
+		startEndpoint = System.currentTimeMillis();
+		
+		System.out.println("Stating to process: " + endPoint);
 		do {
+			totalTime = System.currentTimeMillis() - startEndpoint;
+			if(totalTime > oneHour){
+				throw new Exception("Timeout, more than 1 hour.");
+			}
+//			System.out.println("offset: " + countOffset);
+//			++countOffset;
 			String sparqlQueryString = "SELECT ?s (count(?o) as ?c) WHERE { ?s ?p ?o . FILTER(isliteral(?o)) } group by ?s offset " + offset
 					+ " limit " + offsetSize;
 
@@ -170,25 +163,24 @@ public class Endpoint2Lucene {
 							doc.add(new StringField("dataset_dtype", endPoint + "\t" + dType, Store.YES));
 							iwriter.addDocument(doc);
 						} catch (Exception ex) {
-							System.out.println("Endpoint: "+endPoint+" Error: " + ex.getMessage());
+							//System.out.println("Endpoint1: "+endPoint+" Error: " + ex.getMessage());
 						}
 						totalTriples++;
 					} catch (Exception e) {
-						System.out.println("Endpoint: "+endPoint+" Error: " + e.getMessage());
+						//System.out.println("Endpoint2: "+endPoint+" Error: " + e.getMessage());
+						throw e;
 					}
 				}
 			} catch (Exception en) {
-				mEndPointError.put(endPoint, en.getMessage());
-				System.out.println("Endpoint: "+endPoint+" Error: " + en.getMessage());
-				break;
+				//mEndPointError.put(endPoint, en.getMessage());
+				//System.out.println("Endpoint3: "+endPoint+" Error: " + en.getMessage());
+				throw en;
 			} finally {
 				qexec.close();
 			}
 			
-			System.out.println("offset: " + countOffset);
-			++countOffset;
-			++count;
-			if(count > 999){
+			totalTime = System.currentTimeMillis() - start2;
+			if((totalTriples > 1073741820) || (totalTime > oneDay)){
 				if (iwriter != null) {
 					iwriter.close();
 				}
@@ -196,14 +188,20 @@ public class Endpoint2Lucene {
 					directory.close();
 				}
 				
-				File fDir = new File(luceneDir + "_" + countOffset);
-				fDir.mkdir();
-				directory = new MMapDirectory(fDir);
-				System.out.println("TotaTriples: " + totalTriples);
-				System.out.println("Created Lucene dir: " + fDir.getAbsolutePath());
+				++countDir;
+				File indexDirectory = new File("luceneDir_" + countDir);
+				indexDirectory.mkdir();
+				directory = new MMapDirectory(indexDirectory);
+				System.out.println("Created Lucene dir: " + indexDirectory.getAbsolutePath() + "TotalTriples: " + totalTriples + " TotalTime: " + totalTime);
+				urlAnalyzer = new SimpleAnalyzer(LUCENE_VERSION);
+				Map<String, Analyzer> mapping = new HashMap<String, Analyzer>();
+				mapping.put("uri", urlAnalyzer);
+				mapping.put("dataset_dtype", urlAnalyzer);
+				PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
+				IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
 				iwriter = new IndexWriter(directory, config);
 				iwriter.commit();
-				count = 0;
+				start2 =System.currentTimeMillis();
 			}
 			offset += offsetSize;
 		} while (true);

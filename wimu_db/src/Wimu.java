@@ -61,7 +61,7 @@ public class Wimu {
 				HDTFilesParallel.create(args[1], args[2]);
 			} else if (args[3].equals("endpoints")) {
 				System.out.println("All EndPoints from LODstats");
-				Endpoint2Lucene.create(args[2],true); 
+				Endpoint2Lucene.create(args[2]); 
 			} else if (args[3].equals("all")) {
 				System.out.println("Everything DBpedia + LODStats (Dumps + Endpoints)");
 				System.out.println("Dumps from DBpedia");
@@ -69,7 +69,7 @@ public class Wimu {
 				System.out.println("All dumps from LODstats");
 				LODStats.create(args[1], args[2]);
 				System.out.println("All EndPoints from LODstats");
-				Endpoint2Lucene.create(args[2],true); 
+				Endpoint2Lucene.create(args[2]); 
 				System.out.println("All HDT files from LODLaundromat");
 				HDTFilesSerial.create(args[1], args[2]);
 			} else {
