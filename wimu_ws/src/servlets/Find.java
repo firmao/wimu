@@ -2,18 +2,11 @@ package servlets;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -24,8 +17,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.jena.atlas.json.JsonObject;
 import org.apache.lucene.queryparser.classic.ParseException;
+
+import com.google.gson.Gson;
 
 /**
  * Servlet implementation class Find
@@ -380,8 +374,8 @@ public class Find extends HttpServlet {
 		request.getSession().setAttribute("link", link);
 		
 		URL url = new URL(link);
-		File fLink = new File(url.getFile());
-		FileUtils.copyURLToFile(new URL(link), fLink);
+		File fLink = new File("linkset.nt");
+		FileUtils.copyURLToFile(url, fLink);
 		
 		String dirHDT = null;
 		String dirEndpoints = null;
@@ -407,7 +401,9 @@ public class Find extends HttpServlet {
 
 		Set<WIMUri> results = LuceneUtil.search(fLink, 1000, sDirs);
 			
-		String json = LuceneUtil.set2Json(results);
+		//String json = LuceneUtil.set2Json(results);
+		String json = new Gson().toJson(results);
+		
 		response.getOutputStream().println(json);
 	}
 }

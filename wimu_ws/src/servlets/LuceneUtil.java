@@ -303,14 +303,18 @@ public class LuceneUtil {
 						Map<String, Integer> mTarget = sortByComparator(search(target, maxResults, dirs),false,1);
 						String datasetS = mSource.keySet().iterator().next(); 
 						String datasetT = mSource.keySet().iterator().next();
-						
+						String md5 = null;
 						try{
-							wURI.setHdtS(HDTQueryMan.md5Names.get(datasetS.substring(34, datasetS.indexOf("?"))));
+							md5 = datasetS.substring(34, datasetS.indexOf("?"));
+							wURI.setDatasetS(HDTQueryMan.md5Names.get(md5));
+							wURI.setHdtS(datasetS);
 						}catch(Exception ex){
 							wURI.setDatasetS(datasetS);
 						}
 						try{
-							wURI.setHdtT(HDTQueryMan.md5Names.get(datasetT.substring(34, datasetT.indexOf("?"))));
+							md5 = datasetT.substring(34, datasetT.indexOf("?"));
+							wURI.setDatasetT(HDTQueryMan.md5Names.get(md5));
+							wURI.setHdtT(datasetT);
 						}catch(Exception ex){
 							wURI.setDatasetT(datasetT);
 						}
@@ -362,7 +366,7 @@ public class LuceneUtil {
             }
             json.put("root", jArr);
         } catch (JsonException e) {
-            //
+        	e.printStackTrace();
         }
         return json.toString();
     }
