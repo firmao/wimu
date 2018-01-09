@@ -1,12 +1,24 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.SimpleAnalyzer;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.MMapDirectory;
+import org.apache.lucene.util.Version;
 
 public class WimuUtil {
+	
 	public static Set<String> getAlreadyProcessed(String logFileName) throws IOException {
 		Set<String> setReturn = new HashSet<String>();
 		if (logFileName == null)
@@ -71,4 +83,45 @@ public class WimuUtil {
 	    System.out.println("Total memory available to JVM (bytes): " + 
 	        Runtime.getRuntime().totalMemory());
 	}
+	
+	public static void mergeLuceneIndex(String dir) throws IOException {
+		final Version LUCENE_VERSION = Version.LUCENE_44;
+
+		File INDEXES_DIR = new File(dir);
+
+		Date start = new Date();
+
+		File indexDirectory = new File("indexLuceneDir");
+		indexDirectory.mkdir();
+		MMapDirectory directory = new MMapDirectory(indexDirectory);
+		System.out.println("Created Lucene dir: " + indexDirectory.getAbsolutePath());
+		Analyzer urlAnalyzer = new SimpleAnalyzer(LUCENE_VERSION);
+		Map<String, Analyzer> mapping = new HashMap<String, Analyzer>();
+		mapping.put("uri", urlAnalyzer);
+		mapping.put("dataset_dtype", urlAnalyzer);
+		PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
+		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
+		IndexWriter iwriter = new IndexWriter(directory, config);
+		iwriter.commit();
+
+		FSDirectory indexes[] = new FSDirectory[INDEXES_DIR.list().length];
+
+		for (int i = 0; i < INDEXES_DIR.list().length; i++) {
+			System.out.println("Adding: " + INDEXES_DIR.list()[i]);
+			File f = new File(INDEXES_DIR.getAbsolutePath() + "/" + INDEXES_DIR.list()[i]);
+			indexes[i] = FSDirectory.open(f);
+			System.out.println(indexes[i]);
+		}
+
+		System.out.print("Merging added indexes...");
+		iwriter.addIndexes(indexes);
+		System.out.println("done");
+
+		iwriter.close();
+		System.out.println("done");
+
+		Date end = new Date();
+		System.out.println("It took: " + ((end.getTime() - start.getTime()) / 1000) + "\"");
+	}
+
 }

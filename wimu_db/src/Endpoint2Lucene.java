@@ -8,6 +8,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -57,7 +58,8 @@ public class Endpoint2Lucene {
 		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
 		start = System.currentTimeMillis();
 		//processEndPoints();
-		long totalTriples = extract("http://live.dbpedia.org/sparql");
+		long totalTriples = extractParallel("http://live.dbpedia.org/sparql");
+		//long totalTriples = extract("http://live.dbpedia.org/sparql");
 		totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total time: " + totalTime + " TotalTriples: " + totalTriples);
 	}
@@ -101,10 +103,11 @@ public class Endpoint2Lucene {
 		
 		Set<String> endPoints = Files.lines(Paths.get("GoodEndPoints.txt")).collect(Collectors.toSet());
 		endPoints.removeAll(WimuUtil.getAlreadyProcessed(Wimu.logFileName));
-		endPoints.parallelStream().forEach(endPoint -> {
+		//endPoints.parallelStream().forEach(endPoint -> {
+		endPoints.forEach(endPoint -> {
 			try {
 				//totalTriples += extract(endPoint, 9999);
-				totalTriples += extract(endPoint);
+				totalTriples += extractParallel(endPoint);
 				System.out.println("SUCESS: " + endPoint);
 			} catch (Exception e) {
 				System.out.println("FAIL: " + endPoint + " ERROR: " + e.getMessage());
@@ -121,6 +124,88 @@ public class Endpoint2Lucene {
 		
 		long totalTime = System.currentTimeMillis() - start;
 		System.out.println("Total time: " + totalTime + " TotalTriples: " + totalTriples);
+	}
+
+	private static synchronized long extractParallel(String endPoint) throws Exception {
+		//long countOffset = 0;
+		final long offsetSize = 10000;
+		//long offset = 0;
+		startEndpoint = System.currentTimeMillis();
+		
+		Set<Long> setOffsets = getSetOffsets(offsetSize, 300000);
+		System.out.println("Stating to process: " + endPoint);
+		setOffsets.parallelStream().forEach(offset -> {
+			totalTime = System.currentTimeMillis() - startEndpoint;
+			String sparqlQueryString = "SELECT ?s (count(?o) as ?c) WHERE { ?s ?p ?o . FILTER(isliteral(?o)) } group by ?s offset " + offset
+					+ " limit " + offsetSize;
+
+			Query query = QueryFactory.create(sparqlQueryString);
+
+			int dType = 0;
+			String uri = null;
+			QueryExecution qexec = QueryExecutionFactory.sparqlService(endPoint, query);
+			try {
+				// qexec.setTimeout(300000); 5 minutes timeout
+				ResultSet results = qexec.execSelect();
+				if(!results.hasNext()){
+					System.out.println("Stoped on offset: " + offset + ", there is no more data from: " + endPoint);
+					return;
+				}
+				for (; results.hasNext();) {
+					try {
+						QuerySolution soln = results.nextSolution();
+						dType = soln.get("?c").asLiteral().getInt();
+						uri = soln.get("?s").toString();
+						try {
+							Document doc = new Document();
+							doc.add(new StringField("uri", uri, Store.YES));
+							doc.add(new StringField("dataset_dtype", endPoint + "\t" + dType, Store.YES));
+							iwriter.addDocument(doc);
+						} catch (Exception ex) {
+							//System.out.println("Endpoint1: "+endPoint+" Error: " + ex.getMessage());
+						}
+						totalTriples++;
+					} catch (Exception e) {
+						//System.out.println("Endpoint2: "+endPoint+" Error: " + e.getMessage());
+						throw e;
+					}
+				}
+			} catch (Exception en) {
+				//mEndPointError.put(endPoint, en.getMessage());
+				//System.out.println("Endpoint3: "+endPoint+" Error: " + en.getMessage());
+				throw en;
+			} finally {
+				qexec.close();
+			}
+			
+			//totalTime = System.currentTimeMillis() - start2;
+			//if((totalTriples > 1073741820) || (totalTime > oneDay)){
+			try {
+				checkLimit();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
+
+		if (iwriter != null) {
+			iwriter.close();
+		}
+		if (directory != null) {
+			directory.close();
+		}
+		
+		return totalTriples;
+	}
+	
+	private static Set<Long> getSetOffsets(long offsetSize, int times) {
+		Set<Long> ret = new HashSet<Long>();
+		//long size = offsetSize * times;
+		long offset = 0;
+		for (int i = 0; i < times; i++) {
+			ret.add(offset); 
+			offset += offsetSize;
+		}
+		return ret;
 	}
 
 	private static synchronized long extract(String endPoint) throws Exception {
@@ -179,30 +264,9 @@ public class Endpoint2Lucene {
 				qexec.close();
 			}
 			
-			totalTime = System.currentTimeMillis() - start2;
-			if((totalTriples > 1073741820) || (totalTime > oneDay)){
-				if (iwriter != null) {
-					iwriter.close();
-				}
-				if (directory != null) {
-					directory.close();
-				}
-				
-				++countDir;
-				File indexDirectory = new File("luceneDir_" + countDir);
-				indexDirectory.mkdir();
-				directory = new MMapDirectory(indexDirectory);
-				System.out.println("Created Lucene dir: " + indexDirectory.getAbsolutePath() + "TotalTriples: " + totalTriples + " TotalTime: " + totalTime);
-				urlAnalyzer = new SimpleAnalyzer(LUCENE_VERSION);
-				Map<String, Analyzer> mapping = new HashMap<String, Analyzer>();
-				mapping.put("uri", urlAnalyzer);
-				mapping.put("dataset_dtype", urlAnalyzer);
-				PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
-				IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
-				iwriter = new IndexWriter(directory, config);
-				iwriter.commit();
-				start2 =System.currentTimeMillis();
-			}
+			//totalTime = System.currentTimeMillis() - start2;
+			//if((totalTriples > 1073741820) || (totalTime > oneDay)){
+			checkLimit();
 			offset += offsetSize;
 		} while (true);
 
@@ -214,6 +278,32 @@ public class Endpoint2Lucene {
 		}
 		
 		return totalTriples;
+	}
+
+	private static synchronized void checkLimit() throws IOException {
+		if(totalTriples > 1073741820){
+			if (iwriter != null) {
+				iwriter.close();
+			}
+			if (directory != null) {
+				directory.close();
+			}
+			
+			++countDir;
+			File indexDirectory = new File("luceneDir_" + countDir);
+			indexDirectory.mkdir();
+			directory = new MMapDirectory(indexDirectory);
+			System.out.println("Created Lucene dir: " + indexDirectory.getAbsolutePath() + "TotalTriples: " + totalTriples + " TotalTime: " + totalTime);
+			urlAnalyzer = new SimpleAnalyzer(LUCENE_VERSION);
+			Map<String, Analyzer> mapping = new HashMap<String, Analyzer>();
+			mapping.put("uri", urlAnalyzer);
+			mapping.put("dataset_dtype", urlAnalyzer);
+			PerFieldAnalyzerWrapper perFieldAnalyzer = new PerFieldAnalyzerWrapper(urlAnalyzer, mapping);
+			IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
+			iwriter = new IndexWriter(directory, config);
+			iwriter.commit();
+			start2 =System.currentTimeMillis();
+		}
 	}
 
 	private static synchronized long extract(String endPoint, int limit) throws Exception {
