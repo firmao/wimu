@@ -154,14 +154,25 @@ public class Find extends HttpServlet {
 		//Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
 		Set<String> sDirs = new HashSet<String>();
 		String sHDT [] = dirHDT.split(",");
+		String sEndpoints [] = dirEndpoints.split(",");
+		String sDumps [] = dirDumps.split(",");
 		for (String dHDT : sHDT) {
 			sDirs.add(dHDT);
 		}
+		for (String dEndpoint : sEndpoints) {
+			sDirs.add(dEndpoint);
+		}
+		for (String dDump : sDumps) {
+			sDirs.add(dDump);
+		}
 		//sDirs.add(dirHDT);
-		sDirs.add(dirDumps);
-		sDirs.add(dirEndpoints);
+		//sDirs.add(dirDumps);
+		//sDirs.add(dirEndpoints);
 		//result.putAll(LuceneUtil.search(uri, 1000, sDirs));
 		Map<String, Integer> result = LuceneUtil.search(uri, 1000, sDirs);
+		
+		String dHDTFiles = System.getProperty("user.home") + "/hdtDatasets";
+		result.putAll(HDTQueryMan.findDatasetsHDT(uri, dHDTFiles));
 		
 		return result;
 	}
@@ -205,13 +216,13 @@ public class Find extends HttpServlet {
 //			    .collect(Collectors.toMap(Entry::getKey, Entry::getValue,
 //			                              (e1, e2) -> e1, LinkedHashMap::new));
 		
-		Map<String, Integer> result = LuceneUtil.sortByComparator(result1, false, 5);
+		Map<String, Integer> result = LuceneUtil.sortByComparator(result1, false, 1500);
 		
 		long totalTime = System.currentTimeMillis() - start;
 		
 		if ((result != null) && (result.size() > 0)) {
 			response.getOutputStream().println(
-					"<table border='1'> <tr> <th>Dataset</th> <th>Count DataType</th> <th>HDT</th> </tr>");
+					"<table border='1'> <tr> <th>Dataset</th> <th>Literals</th> <th>HDT</th> </tr>");
 			//response.getOutputStream().println("<script src=\"https://www.w3schools.com/lib/w3.js\"></script>");
 //			response.getOutputStream().println(
 //					"<table id=\"myTable\" border='1'> " + "<tr> " + "<th onclick=\"w3.sortHTML('#myTable', '.item', 'td:nth-child(1)')\" style=\"cursor:pointer\">Dataset</th> "
@@ -247,7 +258,11 @@ public class Find extends HttpServlet {
 						urlDataset = dataset;
 					}
 				}
-						
+				
+				if(urlDataset.endsWith(".hdt")){
+					urlDataset = "http://gaia.infor.uva.es/hdt/" + urlDataset + ".gz";
+				}
+				
 				int dType = elem.getValue();
 				try {
 //					response.getOutputStream()
