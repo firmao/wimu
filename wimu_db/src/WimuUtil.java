@@ -1,11 +1,13 @@
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.lucene.analysis.Analyzer;
@@ -16,9 +18,69 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.util.Version;
+import org.rdfhdt.hdt.enums.RDFNotation;
+import org.rdfhdt.hdt.exceptions.ParserException;
+import org.rdfhdt.hdt.hdt.HDT;
+import org.rdfhdt.hdt.hdt.HDTManager;
+import org.rdfhdt.hdt.options.HDTSpecification;
 
 public class WimuUtil {
 	
+	private static int countFiles = 0;
+	
+	public static void main(String args[]) throws IOException{
+//		Set<File> setFiles = new HashSet<File>();
+//		setFiles.add(new File("/media/andre/DATA/linux/linklion2/wimu_NC11/logs/hdt.txt"));
+//		setFiles.add(new File("/media/andre/DATA/linux/linklion2/wimu_NC11/logs/dumps.txt"));
+//		setFiles.add(new File("/media/andre/DATA/linux/linklion2/wimu_NC11/logs/endpoints.txt"));
+		String dir = "/media/andre/DATA/linux/linklion2/wimu_NC11/logs/";
+		analyseLogFiles(dir);
+	}
+	
+	public static long save2HDT(ConcurrentHashMap<String, Integer> mDatatypeTriples) throws IOException, ParserException{
+		long triples = 0;
+		countFiles++;
+		File fNT = map2NT(mDatatypeTriples);
+		// Configuration variables
+		//String baseURI = "http://example.com/mydataset";
+		String baseURI = "http://dice.com/wimu";
+		//String rdfInput = "/path/to/dataset.nt";
+		String rdfInput = fNT.getAbsolutePath();
+		String inputType = "ntriples";
+		//String hdtOutput = "/path/to/dataset.hdt";
+		String hdtOutput = "hdt/" + countFiles + "_" + fNT.getName().replaceAll(".nt", ".hdt");
+
+		// Create HDT from RDF file
+		HDT hdt = HDTManager.generateHDT(rdfInput, baseURI, RDFNotation.parse(inputType), new HDTSpecification(), null);
+
+		try {
+			// Save generated HDT to a file
+			hdt.saveToHDT(hdtOutput, null);
+		} finally {
+			// IMPORTANT: Free resources
+			hdt.close();
+			fNT.delete();
+		}
+		
+		return triples;
+	}
+	
+	private static File map2NT(ConcurrentHashMap<String, Integer> maps) {
+		File ret = new File("hdt/" + countFiles + "_temp.nt");
+		System.out.println("Generating file: " + ret.getAbsolutePath());
+		try {
+			PrintWriter writer = new PrintWriter(ret.getName(), "UTF-8");
+			maps.forEach((uriDataset, dTypes) -> {
+				writer.println(uriDataset + " \"" + dTypes + "\"^^<http://www.w3.org/2001/XMLSchema#int> .");
+			});
+			writer.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.out.println("File generated: " + ret.getAbsolutePath());
+		return null;
+	}
+
 	public static Set<String> getAlreadyProcessed(String logFileName) throws IOException {
 		Set<String> setReturn = new HashSet<String>();
 		if (logFileName == null)
@@ -66,6 +128,41 @@ public class WimuUtil {
 		}
 		System.out.println("skiping " + setReturn.size() + " ERROR files already processed.");
 		return setReturn;
+	}
+	
+	public static void analyseLogFiles(String dir) throws IOException {
+		File f = new File(dir);
+		File logFiles[] = f.listFiles();
+		Map<String, String> mapErrors = new HashMap<String, String>();
+		Set<String> setSuccess = new HashSet<String>();
+		PrintWriter writer = new PrintWriter("LogAnalisis.csv", "UTF-8");
+		writer.println("File\tSuccess\tErrors");
+		for (File fLog : logFiles) {
+			PrintWriter wError = new PrintWriter(fLog.getName() + "_errors.csv", "UTF-8");
+			wError.println("Dataset\tError");
+			List<String> lstLog = FileUtils.readLines(fLog, "UTF-8");
+			String fName = null;
+			String error = "";
+			for (String line : lstLog) {
+				if (line.startsWith("SUCESS: ")) {
+					fName = line.split("SUCESS: ")[1];
+					setSuccess.add(fName.trim());
+					mapErrors.put(fName.trim(),error);
+				} else if (line.startsWith("FAIL: ")) {
+					fName = line.split("FAIL: ")[1];
+					String s[] = fName.split(" ERROR:");
+					fName = s[0];
+					error = s[1].trim();
+					mapErrors.put(fName.trim(),error);
+				}
+			}
+			mapErrors.entrySet().forEach(entry ->{
+				wError.println(entry.getKey() + "\t" + entry.getValue());
+			});
+			wError.close();
+			writer.println(fLog.getName() + "\t" + setSuccess.size() + "\t" + mapErrors.size());
+		}
+		writer.close();
 	}
 	
 	public static void printMemory(){

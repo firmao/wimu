@@ -1,9 +1,11 @@
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.net.SocketException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -15,6 +17,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -27,6 +30,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFParserBuilder;
 import org.apache.jena.riot.system.StreamRDF;
 import org.apache.jena.sparql.core.Quad;
 import org.apache.lucene.analysis.Analyzer;
@@ -362,12 +366,32 @@ public class DBpedia {
 					}
 				}
 			};
+			RDFParserBuilder a = RDFParserBuilder.create();
+			
 			if (fUnzip.getName().endsWith(".tql")) {
-				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NQUADS);
+//				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NQUADS);
+				a.forceLang(Lang.NQUADS);
 			} else if (fUnzip.getName().endsWith(".ttl")) {
-				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.TTL);
+//				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.TTL);
+				a.forceLang(Lang.TTL);
 			} else {
-				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath());
+//				RDFDataMgr.parse(reader, fUnzip.getAbsolutePath());
+				a.forceLang(Lang.RDFXML);
+			}
+			Scanner in = null;
+			try {
+				in = new Scanner(fUnzip);
+				while(in.hasNextLine()) {
+					a.source(new StringReader(in.nextLine()));
+					try {
+						a.parse(reader);
+					} catch (Exception e) {
+						//e.printStackTrace();
+					}
+				}
+				in.close();
+			} catch (FileNotFoundException e) {
+				//e.printStackTrace();
 			}
 			fUnzip.delete();
 		} catch (Exception ex) {

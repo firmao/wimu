@@ -103,11 +103,11 @@ public class Endpoint2Lucene {
 		
 		Set<String> endPoints = Files.lines(Paths.get("GoodEndPoints.txt")).collect(Collectors.toSet());
 		endPoints.removeAll(WimuUtil.getAlreadyProcessed(Wimu.logFileName));
-		//endPoints.parallelStream().forEach(endPoint -> {
-		endPoints.forEach(endPoint -> {
+		endPoints.parallelStream().forEach(endPoint -> {
+		//endPoints.forEach(endPoint -> {
 			try {
-				//totalTriples += extract(endPoint, 9999);
-				totalTriples += extractParallel(endPoint);
+				totalTriples += extract(endPoint, 9999);
+				//totalTriples += extractParallel(endPoint);
 				System.out.println("SUCESS: " + endPoint);
 			} catch (Exception e) {
 				System.out.println("FAIL: " + endPoint + " ERROR: " + e.getMessage());
@@ -132,7 +132,7 @@ public class Endpoint2Lucene {
 		//long offset = 0;
 		startEndpoint = System.currentTimeMillis();
 		
-		Set<Long> setOffsets = getSetOffsets(offsetSize, 300000);
+		Set<Long> setOffsets = getSetOffsets(offsetSize, 100);
 		System.out.println("Stating to process: " + endPoint);
 		setOffsets.parallelStream().forEach(offset -> {
 			totalTime = System.currentTimeMillis() - startEndpoint;
