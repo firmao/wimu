@@ -14,71 +14,33 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 -`Jena`.
 
--`Tomcat 6`. 
-
-- Apache [Solr](https://lucene.apache.org/solr/).
+-`Tomcat 6 (minimal)`. 
 
 # Build instructions:
 
-## Apache Solr index
-
-- Start the solr server.
-<pre>
-bin/solr start
-</pre>
-- Create a new core directory called "wimu".
-<pre>
-bin/solr create -c wimu
-</pre>
-more information about [solr](https://lucene.apache.org/solr/guide/6_6/running-solr.html)
+https://github.com/dice-group/docker-wimu
 
 To create the index:
 <pre>
-java -jar wimu.jar create < dbpedia / dumps / endpoints / dbpediaEndpoint / * >
+java -jar wimu.jar create dumpDir ldir < dbpedia / dumps / endpoints / hdt / all / * >
 </pre>  
 where:
 - `dbpedia - Process only Dumps from DBpedia.`
 - `dumps - Process all Dumps from the whole LODStats.`
 - `endpoints - All Endpoints from LODstats.`
-- `dbpediaEndPoint - Process only DBpedia SPARQL EndPoint.`
-- `*  - Dumps and SPARQL Endpoints from LODstats.` 
+- `hdt - Process HDT files from LODLoundromat and rdfhdt.org.`
+- `all - everything.` 
 
 To search in the index via command line:
 <pre>
-java -jar wimu.jar search < URI / * >
+java -jar wimu.jar search < URI >
 </pre>  
 where:
 - `URI - specific URI to search.`
-- `*  - All the data form the index.` 
-
 
 Download [wimu.jar](https://goo.gl/wFBydb)
 
-## In video:
-https://youtu.be/13cwc_UwfPc
-
-# Semantic Web service
-The service to access the Database works with the Tomcat 6.
-
-https://github.com/dice-group/wimu/tree/master/wimu_ws
-
-## Example of usage (Command line mode):
-<pre>
-curl http://139.18.8.58:8080/wimu_ws/Find?uri=http://semanticscience.org/resource/SIO_000272
-
-Output(JSON):
-[{"EndPoint":"http://biordf.net/sparql","CDataType":"1"},{"EndPoint":"http://lov.okfn.org/dataset/lov/sparql","CDataType":"4"}]
-
-</pre>
-## Demonstration via website:
-
-http://139.18.8.58:8080/LinkLion2_WServ/
-
-
 You can also clone the whole repository in which will include both projects (Database index creation and the webservice).
-
-## In video:
-https://youtu.be/-ZMcfhfYjm0
 
 # Contact
 In case of questions, feel free to contact André Valdestilhas <valdestilhas@informatik.uni-leipzig.de> or Tommaso Soru <tsoru@informatik.uni-leipzig.de>
