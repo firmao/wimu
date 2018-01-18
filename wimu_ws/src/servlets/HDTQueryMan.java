@@ -86,9 +86,9 @@ public class HDTQueryMan {
 	/*
 	 * returns the count of literals that a subject has.
 	 */
-	public static int getHDTDTypes(File dataset, String uri) {
+	public static int getHDTDTypes(File dataset, String uri) throws IOException {
 		int ret = 0;
-		HDT hdt;
+		HDT hdt = null;
 		try {
 			// hdt = HDTManager.loadIndexedHDT(fileHDT, null);
 			hdt = HDTManager.mapHDT(dataset.getAbsolutePath(), null);
@@ -101,7 +101,11 @@ public class HDTQueryMan {
 			ret = sparql(model, query1);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+		} finally {
+			if(hdt != null){
+				hdt.close();
+			}
 		}
 
 		return ret;
@@ -141,7 +145,13 @@ public class HDTQueryMan {
 			datasets = getFiles(new File(dirHDT));
 			// for (File dataset : datasets) {
 			datasets.parallelStream().forEach(dataset -> {
-				int dTypes = getHDTDTypes(dataset, uri);
+				int dTypes = 0;
+				try {
+					dTypes = getHDTDTypes(dataset, uri);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					//e.printStackTrace();
+				}
 				if (dTypes > 0) {
 					result.put(dataset.getName(), dTypes);
 				}

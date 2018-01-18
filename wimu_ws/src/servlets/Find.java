@@ -26,7 +26,7 @@ import com.google.gson.Gson;
  */
 public class Find extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-
+	private static long timeLoadMD5HDT = 0;
 	/**
 	 * @see HttpServlet#HttpServlet()
 	 */
@@ -39,7 +39,9 @@ public class Find extends HttpServlet {
 		// TODO Auto-generated method stub
 		super.init();
 		try {
+			long start = System.currentTimeMillis();
 			HDTQueryMan.loadFileMap("md5HDT.csv");
+			timeLoadMD5HDT = System.currentTimeMillis() - start;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -134,45 +136,56 @@ public class Find extends HttpServlet {
 
 	private Map<String, Integer> findDatasets(String uri, HttpServletRequest request) throws IOException, ParseException {
 		
-		String dirHDT = null;
-		String dirEndpoints = null;
-		String dirDumps = null;
-		//if(request.getSession().getAttribute("dirHDT") != null){
-		if(System.getProperty("dirHDT") != null){
-			//dirHDT = request.getSession().getAttribute("dirHDT").toString();
-			dirHDT = System.getProperty("dirHDT");
-		}
-		if(System.getProperty("dirEndpoints") != null){
-			//dirEndpoints = request.getSession().getAttribute("dirEndpoints").toString();
-			dirEndpoints = System.getProperty("dirEndpoints");
-		}
-		if(System.getProperty("dirDumps") != null){
-			//dirDumps = request.getSession().getAttribute("dirDumps").toString();
-			dirDumps = System.getProperty("dirDumps");
-		}
-		
-		//Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
+//		String dirHDT = null;
+//		String dirEndpoints = null;
+//		String dirDumps = null;
+//		//if(request.getSession().getAttribute("dirHDT") != null){
+//		if(System.getProperty("dirHDT") != null){
+//			//dirHDT = request.getSession().getAttribute("dirHDT").toString();
+//			dirHDT = System.getProperty("dirHDT");
+//		}
+//		if(System.getProperty("dirEndpoints") != null){
+//			//dirEndpoints = request.getSession().getAttribute("dirEndpoints").toString();
+//			dirEndpoints = System.getProperty("dirEndpoints");
+//		}
+//		if(System.getProperty("dirDumps") != null){
+//			//dirDumps = request.getSession().getAttribute("dirDumps").toString();
+//			dirDumps = System.getProperty("dirDumps");
+//		}
+//		
+//		//Map<String, Integer> result = HDTQueryMan.findDatasetsHDT(uri, dirHDT);
+//		Set<String> sDirs = new HashSet<String>();
+//		
+//		String sHDT [] = dirHDT.split(",");
+//		String sEndpoints [] = dirEndpoints.split(",");
+//		String sDumps [] = dirDumps.split(",");
+//		for (String dHDT : sHDT) {
+//			sDirs.add(dHDT);
+//		}
+//		for (String dEndpoint : sEndpoints) {
+//			sDirs.add(dEndpoint);
+//		}
+//		for (String dDump : sDumps) {
+//			sDirs.add(dDump);
+//		}
 		Set<String> sDirs = new HashSet<String>();
-		String sHDT [] = dirHDT.split(",");
-		String sEndpoints [] = dirEndpoints.split(",");
-		String sDumps [] = dirDumps.split(",");
-		for (String dHDT : sHDT) {
-			sDirs.add(dHDT);
+		String dirInd = null;
+		String dirHDT = null;
+		if(System.getProperty("dirInd") != null){
+			dirInd = System.getProperty("dirInd");
 		}
-		for (String dEndpoint : sEndpoints) {
-			sDirs.add(dEndpoint);
+		File fDir = new File(dirInd);
+		String s[] = fDir.list();
+		for (String dir : s) {
+			if(dir.equals("hdtDatasets")){
+				dirHDT = fDir.getAbsolutePath() + "/" + dir;
+			}else{
+				sDirs.add(fDir.getAbsolutePath() + "/" + dir);
+			}
 		}
-		for (String dDump : sDumps) {
-			sDirs.add(dDump);
-		}
-		//sDirs.add(dirHDT);
-		//sDirs.add(dirDumps);
-		//sDirs.add(dirEndpoints);
-		//result.putAll(LuceneUtil.search(uri, 1000, sDirs));
+
 		Map<String, Integer> result = LuceneUtil.search(uri, 1000, sDirs);
-		
-		String dHDTFiles = System.getProperty("user.home") + "/hdtDatasets";
-		result.putAll(HDTQueryMan.findDatasetsHDT(uri, dHDTFiles));
+		result.putAll(HDTQueryMan.findDatasetsHDT(uri, dirHDT));
 		
 		return result;
 	}
@@ -206,6 +219,13 @@ public class Find extends HttpServlet {
 	private void findHdt(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException {
 		String uri = request.getParameter("urihdt");
 		request.getSession().setAttribute("urihdt", uri);
+		int top = 10;
+		try{
+			top = Integer.parseInt(request.getParameter("top"));
+		}catch(Exception ex){
+			
+		}
+		
 		long start = System.currentTimeMillis();
 		
 		Map<String, Integer> result1 = findDatasets(uri, request);
@@ -216,13 +236,13 @@ public class Find extends HttpServlet {
 //			    .collect(Collectors.toMap(Entry::getKey, Entry::getValue,
 //			                              (e1, e2) -> e1, LinkedHashMap::new));
 		
-		Map<String, Integer> result = LuceneUtil.sortByComparator(result1, false, 1500);
+		Map<String, Integer> result = LuceneUtil.sortByComparator(result1, false, top);
 		
 		long totalTime = System.currentTimeMillis() - start;
 		
 		if ((result != null) && (result.size() > 0)) {
 			response.getOutputStream().println(
-					"<table border='1'> <tr> <th>Dataset</th> <th>Literals</th> <th>HDT</th> </tr>");
+					"<table border='1'> <tr> <th>Dataset</th> <th>Literals</th> <th>HDT</th> <th>Original file</th> </tr>");
 			//response.getOutputStream().println("<script src=\"https://www.w3schools.com/lib/w3.js\"></script>");
 //			response.getOutputStream().println(
 //					"<table id=\"myTable\" border='1'> " + "<tr> " + "<th onclick=\"w3.sortHTML('#myTable', '.item', 'td:nth-child(1)')\" style=\"cursor:pointer\">Dataset</th> "
@@ -235,6 +255,7 @@ public class Find extends HttpServlet {
 				String dsName = null;
 				String dsHDT = "#";
 				String imgHDT = "-";
+				String imgFile = "<img src=\"http://st.depositphotos.com/1000715/125/i/950/depositphotos_1258962-Old-folder-with-stack-of-old-papers.jpg\"alt=\"Donwload the original file.\" width=\"30\" height=\"30\">";
 				//if((dataset != null) && (dataset.length() > 40)){
 				//String md5 = dataset.substring(0, dataset.indexOf("."));
 				try{
@@ -257,32 +278,38 @@ public class Find extends HttpServlet {
 					}else{
 						urlDataset = dataset;
 					}
+					
 				}
 				
 				if(urlDataset.endsWith(".hdt")){
 					urlDataset = "http://gaia.infor.uva.es/hdt/" + urlDataset + ".gz";
 				}
 				
+				if((!dataset.startsWith("http")) || (!dataset.startsWith("ftp"))){
+					dataset = urlDataset;
+				}
+				
 				int dType = elem.getValue();
 				try {
 //					response.getOutputStream()
-//					.println("<tr class=\"item\"> " + "<td><a href='"+ urlDataset +"'>" + dataset + "</a></td> " + "<td>" + dType + "</td> " + "</tr>");
+//					.println("<tr> " + "<td><a href='"+ urlDataset +"'>" + dataset + "</a></td> " + "<td>" + dType + "</td> <td><a href='"+ dsHDT +"'>"+ imgHDT +"</a></td></tr>");
 					response.getOutputStream()
-					.println("<tr> " + "<td><a href='"+ urlDataset +"'>" + dataset + "</a></td> " + "<td>" + dType + "</td> <td><a href='"+ dsHDT +"'>"+ imgHDT +"</a></td></tr>");
+					.println("<tr> " + "<td>" + dataset + "</td> " + "<td>" + dType + "</td> <td><a href='"+ dsHDT +"'>"+ imgHDT +"</a></td><td><a href='"+ urlDataset +"'>"+ imgFile +"</a></td></tr>");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			});
 			response.getOutputStream().println("</table>");
-			response.getOutputStream().println("<h3>URI: " + uri + "</h3> <br>Top "+ ((result1.size() < 5) ? result1.size() : 5) +" from "+ result1.size() +" datasets.");
+			response.getOutputStream().println("<h3>URI: " + uri + "</h3> <br>Top "+ top +" from "+ result1.size() +" datasets.");
 			//response.getOutputStream().println("<h3>Global: " + System.getProperty("nada") + "</h3>");
 		} else {
 			response.getOutputStream().println("<h1>NOTHING !</h1>");
 		}
-		response.getOutputStream().println("<br> TotalTime: " + totalTime + " ms"
+		response.getOutputStream().println("<br> TotalTime: " + totalTime + " ms "
+				+ "<br> Time creating MD5HDT mapping: " + timeLoadMD5HDT + " ms"
 				+ "<br>The data comes from the most useful/popular datasets from the <a href='http://linkeddata.org/'>http://linkeddata.org/</a>"
 				+ " available in HDT format <a href='http://www.rdfhdt.org/datasets/'>http://www.rdfhdt.org/</a><br>"
-				+ "<a href='/LinkLion2_WServ/'>Back</a>");
+				+ "<a href='./'>Back</a>");
 	}
 
 	private void findWeb(HttpServletRequest request, HttpServletResponse response) throws IOException {

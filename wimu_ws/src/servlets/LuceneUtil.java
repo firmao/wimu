@@ -2,6 +2,7 @@ package servlets;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,6 +19,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.jena.atlas.json.JsonArray;
 import org.apache.jena.atlas.json.JsonException;
 import org.apache.jena.atlas.json.JsonObject;
@@ -73,8 +75,39 @@ public class LuceneUtil {
 	public static void main(String[] args) throws IOException {
 		HDTQueryMan.loadFileMap("md5HDT.csv");
 		String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
-		//String dirHDT = "/media/andre/TOSHIBA\\ EXT/hdtAmazon/hdtFiles/";
-		createHDTLuceneIndex("dirLuceneHDT", new File(dirHDT));
+		// String dirHDT = "/media/andre/TOSHIBA\\ EXT/hdtAmazon/hdtFiles/";
+		// createHDTLuceneIndex("dirLuceneHDT", new File(dirHDT));
+		File f = new File("/media/andre/DATA/linux/linklion2/f100.csv");
+		processFileBatch(f);
+	}
+
+	private static void processFileBatch(File pFile) throws IOException {
+		PrintWriter writer = new PrintWriter("/media/andre/DATA/linux/linklion2/p100.csv", "UTF-8");
+		List<String> lstLines = FileUtils.readLines(pFile, "UTF-8");
+		Set<String> dirs = new HashSet<String>();
+		dirs.add(System.getProperty("user.home") + "/luceneDirs/luceneDirHDT_");
+		dirs.add("/media/andre/DATA/linux/linklion2/luceneDirs/luceneDirHDT_1");
+		dirs.add("/media/andre/DATA/linux/linklion2/luceneDirs/luceneDirHDT_2");
+		dirs.add("/media/andre/DATA/linux/linklion2/luceneDirs/luceneDirHDT_3");
+		dirs.add(System.getProperty("user.home") + "/luceneDirs/endpoints");
+		dirs.add(System.getProperty("user.home") + "/luceneDirs/lodStatsDumps");
+		String dHDTFiles = System.getProperty("user.home") + "/hdtDatasets";
+		lstLines.forEach(line -> {
+			try {
+				Map<String, Integer> map = search(line, 1000, dirs);
+				map.putAll(HDTQueryMan.findDatasetsHDT(line, dHDTFiles));
+				Map<String, Integer> mRes = sortByComparator(map, false, 1);
+				if (mRes.size() > 0) {
+					String dataset = mRes.keySet().iterator().next();
+					System.out.println(line + "\t" + dataset);
+					writer.println(line + "\t" + dataset);
+				}
+			} catch (IOException | ParseException e) {
+				// TODO Auto-generated catch block
+				// e.printStackTrace();
+			}
+		});
+		writer.close();
 	}
 
 	private static void createHDTLuceneIndex(String dirLucene, File dirHDT) throws IOException {
@@ -85,7 +118,7 @@ public class LuceneUtil {
 			datasets = Files.walk(Paths.get(dirHDT.getPath())).filter(Files::isRegularFile).map(Path::toFile)
 					.collect(Collectors.toSet());
 			datasets.forEach(dataset -> {
-			//datasets.parallelStream().forEach(dataset -> {
+				// datasets.parallelStream().forEach(dataset -> {
 				String uriDataset = null;
 				HashMap<String, Integer> mDatatypeTriples = new HashMap<String, Integer>();
 				int cDtypes = 0;
@@ -98,7 +131,7 @@ public class LuceneUtil {
 					org.apache.jena.query.Query query = QueryFactory.create(sparql);
 					QueryExecution qe = QueryExecutionFactory.create(query, model);
 					ResultSet results = qe.execSelect();
-					while(results.hasNext()) {
+					while (results.hasNext()) {
 						QuerySolution thisRow = results.next();
 						uriDataset = thisRow.get("s").toString() + "\t" + dataset.getName();
 						if (mDatatypeTriples.containsKey(uriDataset)) {
@@ -147,7 +180,7 @@ public class LuceneUtil {
 		IndexWriterConfig config = new IndexWriterConfig(LUCENE_VERSION, perFieldAnalyzer);
 		iwriter = new IndexWriter(directory, config);
 
-		//iwriter.deleteAll();
+		// iwriter.deleteAll();
 		//
 		iwriter.commit();
 	}
@@ -155,7 +188,7 @@ public class LuceneUtil {
 	private static void insertLucene(HashMap<String, Integer> mDatatypeTriples2) throws IOException {
 		System.out.println("Inserting Lucene " + mDatatypeTriples2.size() + " dataType triples");
 		mDatatypeTriples2.entrySet().parallelStream().forEach(elem -> {
-		//mDatatypeTriples2.entrySet().forEach(elem -> {
+			// mDatatypeTriples2.entrySet().forEach(elem -> {
 			String uriDs = elem.getKey();
 			int dTypes = elem.getValue();
 
@@ -179,7 +212,7 @@ public class LuceneUtil {
 		ConcurrentHashMap<String, Integer> mResults = new ConcurrentHashMap<String, Integer>();
 		dirs.parallelStream().forEach(dir -> {
 			try {
-				System.out.println("Lucene dir: " + dir);
+				// System.out.println("Lucene dir: " + dir);
 				File indexDirectory = new File(dir);
 				MMapDirectory directory = new MMapDirectory(indexDirectory);
 				DirectoryReader ireader = DirectoryReader.open(directory);
@@ -213,7 +246,7 @@ public class LuceneUtil {
 					directory.close();
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 		});
 		return mResults;
@@ -259,7 +292,7 @@ public class LuceneUtil {
 
 	public static Set<WIMUri> search(File fLink, int maxResults, Set<String> dirs) {
 		Set<WIMUri> ret = new HashSet<WIMUri>();
-		
+
 		try {
 			StreamRDF reader = new StreamRDF() {
 
@@ -297,25 +330,25 @@ public class LuceneUtil {
 				public synchronized void triple(Triple triple) {
 					String source = triple.getSubject().toString();
 					String target = triple.getObject().toString();
-					WIMUri wURI = new WIMUri(source,target);
+					WIMUri wURI = new WIMUri(source, target);
 					try {
-						Map<String, Integer> mSource = sortByComparator(search(source, maxResults, dirs),false,1);
-						Map<String, Integer> mTarget = sortByComparator(search(target, maxResults, dirs),false,1);
-						String datasetS = mSource.keySet().iterator().next(); 
-						String datasetT = mSource.keySet().iterator().next();
+						Map<String, Integer> mSource = sortByComparator(search(source, maxResults, dirs), false, 1);
+						Map<String, Integer> mTarget = sortByComparator(search(target, maxResults, dirs), false, 1);
+						String datasetS = mSource.keySet().iterator().next();
+						String datasetT = mTarget.keySet().iterator().next();
 						String md5 = null;
-						try{
+						try {
 							md5 = datasetS.substring(34, datasetS.indexOf("?"));
 							wURI.setDatasetS(HDTQueryMan.md5Names.get(md5));
 							wURI.setHdtS(datasetS);
-						}catch(Exception ex){
+						} catch (Exception ex) {
 							wURI.setDatasetS(datasetS);
 						}
-						try{
+						try {
 							md5 = datasetT.substring(34, datasetT.indexOf("?"));
 							wURI.setDatasetT(HDTQueryMan.md5Names.get(md5));
 							wURI.setHdtT(datasetT);
-						}catch(Exception ex){
+						} catch (Exception ex) {
 							wURI.setDatasetT(datasetT);
 						}
 						wURI.setcDatatypesS(mSource.values().iterator().next().intValue());
@@ -344,65 +377,58 @@ public class LuceneUtil {
 		}
 		return ret;
 	}
-	
+
 	public static String set2Json(Set<WIMUri> setWUri) {
 		JsonObject json = new JsonObject();
 		JsonObject tempj = new JsonObject();
-        JsonArray jArr = new JsonArray();
-        try {
-            for (WIMUri wURI : setWUri) {
-                if (wURI != null) {
-                    tempj = new JsonObject();
-                    tempj.put("uriS", wURI.getUriS());
-                    tempj.put("datasetS", wURI.getDatasetS());
-                    tempj.put("hdtS", wURI.getHdtS());
-                    tempj.put("cDatatypesS", wURI.getcDatatypesS());
-                    tempj.put("uriT", wURI.getUriT());
-                    tempj.put("datasetT", wURI.getDatasetT());
-                    tempj.put("hdtT", wURI.getHdtT());
-                    tempj.put("cDatatypesT", wURI.getcDatatypesT());
-                    jArr.add(tempj);
-                }
-            }
-            json.put("root", jArr);
-        } catch (JsonException e) {
-        	e.printStackTrace();
-        }
-        return json.toString();
-    }
-	
-	public static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, final boolean order, int top)
-    {
-        List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
+		JsonArray jArr = new JsonArray();
+		try {
+			for (WIMUri wURI : setWUri) {
+				if (wURI != null) {
+					tempj = new JsonObject();
+					tempj.put("uriS", wURI.getUriS());
+					tempj.put("datasetS", wURI.getDatasetS());
+					tempj.put("hdtS", wURI.getHdtS());
+					tempj.put("cDatatypesS", wURI.getcDatatypesS());
+					tempj.put("uriT", wURI.getUriT());
+					tempj.put("datasetT", wURI.getDatasetT());
+					tempj.put("hdtT", wURI.getHdtT());
+					tempj.put("cDatatypesT", wURI.getcDatatypesT());
+					jArr.add(tempj);
+				}
+			}
+			json.put("root", jArr);
+		} catch (JsonException e) {
+			e.printStackTrace();
+		}
+		return json.toString();
+	}
 
-        // Sorting the list based on values
-        Collections.sort(list, new Comparator<Entry<String, Integer>>()
-        {
-            public int compare(Entry<String, Integer> o1,
-                    Entry<String, Integer> o2)
-            {
-                if (order)
-                {
-                    return o1.getValue().compareTo(o2.getValue());
-                }
-                else
-                {
-                    return o2.getValue().compareTo(o1.getValue());
+	public static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap, final boolean order, int top) {
+		List<Entry<String, Integer>> list = new LinkedList<Entry<String, Integer>>(unsortMap.entrySet());
 
-                }
-            }
-        });
+		// Sorting the list based on values
+		Collections.sort(list, new Comparator<Entry<String, Integer>>() {
+			public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+				if (order) {
+					return o1.getValue().compareTo(o2.getValue());
+				} else {
+					return o2.getValue().compareTo(o1.getValue());
 
-        int count = 0;
-        // Maintaining insertion order with the help of LinkedList
-        Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
-        for (Entry<String, Integer> entry : list)
-        {
-        	if(count > (top-1)) break;
-            sortedMap.put(entry.getKey(), entry.getValue());
-            ++count;
-        }
+				}
+			}
+		});
 
-        return sortedMap;
-    }
+		int count = 0;
+		// Maintaining insertion order with the help of LinkedList
+		Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
+		for (Entry<String, Integer> entry : list) {
+			if (count > (top - 1))
+				break;
+			sortedMap.put(entry.getKey(), entry.getValue());
+			++count;
+		}
+
+		return sortedMap;
+	}
 }
