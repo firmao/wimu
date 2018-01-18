@@ -20,6 +20,10 @@ We finally show use-cases of applications that can immediately benefit from our 
 
 https://github.com/dice-group/docker-wimu
 
+Download the index in Apache Lucene:
+
+http://wimu-data.aksw.org/WimuLuceneIndex.zip
+
 To create the index:
 <pre>
 java -jar wimu.jar create dumpDir ldir < dbpedia / dumps / endpoints / hdt / all / * >
