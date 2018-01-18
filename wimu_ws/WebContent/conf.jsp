@@ -6,21 +6,8 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Where is my URI</title>
 <%
-	out.println(request.getParameter("dirHDT"));
-	out.println(request.getParameter("dirEndpoints"));
-	out.println(request.getParameter("dirDumps"));
-	if ((request.getParameter("dirHDT") != null) && (request.getParameter("dirEndpoints") != null)
-			&& (request.getParameter("dirDumps") != null)) {
-		request.getSession().setAttribute("dirHDT", request.getParameter("dirHDT"));
-		request.getSession().setAttribute("dirEndpoints", request.getParameter("dirEndpoints"));
-		request.getSession().setAttribute("dirDumps", request.getParameter("dirDumps"));
-
-// 		try {
-// 			HDTQueryMan.loadFileMap("md5HDT.csv");
-// 		} catch (Exception e) {
-// 			e.printStackTrace();
-// 		}
-		
+	if (request.getParameter("dirInd") != null) {
+		System.setProperty("dirInd", request.getParameter("dirInd"));
 		response.sendRedirect("index.jsp");
 		return;
 	}
@@ -33,10 +20,8 @@
 	<br>
 
 	<form action="conf.jsp">
-		Dir HDT: <input type="text" name="dirHDT" size="100"> <br>
-		Dir Lucene endpoints: <input type="text" name="dirEndpoints" size="100">
-		<br> Dir Lucene dumps: <input type="text" name="dirDumps"
-			size="100"> <br> <input type="submit" value="Send">
+		Dir index: <input type="text" name="dirInd" size="100">
+		<br> <input type="submit" value="Send">
 	</form>
 </body>
 </html>
