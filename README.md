@@ -45,6 +45,7 @@ where:
 Download [wimu.jar](https://goo.gl/wFBydb)
 
 You can also clone the whole repository in which will include both projects (Database index creation and the webservice).
+or download the 2 eclipse projects from [here](http://wimu-data.aksw.org/src_wimu_eclipse.zip).
 
 # Contact
 In case of questions, feel free to contact André Valdestilhas <valdestilhas@informatik.uni-leipzig.de> or Tommaso Soru <tsoru@informatik.uni-leipzig.de>
