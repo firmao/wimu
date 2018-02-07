@@ -59,9 +59,12 @@ public class Wimu {
 			} else if (args[3].equals("dumps")) {
 				System.out.println("All dumps from LODstats");
 				LODStats.create(args[1], args[2]);
-			} else if (args[3].equals("hdtParallel")) {
+			} else if (args[3].equals("hdt")) {
 				System.out.println("All HDT files from LODLaundromat (Parallel)");
 				HDTFilesParallel.create(args[1], args[2]);
+			} else if (args[3].equals("hdtliteral")) {
+				System.out.println("All HDT files from LODLaundromat (Parallel)");
+				HDTLiteral.create(args[1], args[2]);
 			} else if (args[3].equals("rdfhdt.org")) {
 				System.out.println("All HDT files from rdfhdt.org (Parallel)");
 				RDF_HDT_org.create(args[1], args[2]);

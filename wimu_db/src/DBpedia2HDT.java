@@ -106,7 +106,7 @@ public class DBpedia2HDT {
 
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date date = new Date();
-		System.out.println("DumpDBpedia2Lucene...Parallel, starting: " + dateFormat.format(date));
+		System.out.println("DBpedia2HDT...Parallel, starting: " + dateFormat.format(date));
 		start = System.currentTimeMillis();
 
 		int cores = Runtime.getRuntime().availableProcessors();

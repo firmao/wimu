@@ -28,17 +28,23 @@ public class WimuUtil {
 	
 	private static int countFiles = 0;
 	
-	public static void main(String args[]) throws IOException{
+	public static void main(String args[]) throws IOException, ParserException{
 //		Set<File> setFiles = new HashSet<File>();
 //		setFiles.add(new File("/media/andre/DATA/linux/linklion2/wimu_NC11/logs/hdt.txt"));
 //		setFiles.add(new File("/media/andre/DATA/linux/linklion2/wimu_NC11/logs/dumps.txt"));
 //		setFiles.add(new File("/media/andre/DATA/linux/linklion2/wimu_NC11/logs/endpoints.txt"));
-		String dir = "/media/andre/DATA/linux/linklion2/wimu_NC11/logs/";
-		analyseLogFiles(dir);
+		//String dir = "/media/andre/DATA/linux/linklion2/wimu_NC11/logs/";
+		//analyseLogFiles(dir);
+		ConcurrentHashMap<String, Integer> mTest = new ConcurrentHashMap<String, Integer>();
+		for(int i=0;i<100;i++){
+			mTest.put("<http://test.com/nothing> <http://dataset_"+i+".org>", i);
+		}
+		File f = new File("hdt");
+		f.mkdir();
+		save2HDT(mTest);
 	}
 	
-	public static long save2HDT(ConcurrentHashMap<String, Integer> mDatatypeTriples) throws IOException, ParserException{
-		long triples = 0;
+	public static void save2HDT(ConcurrentHashMap<String, Integer> mDatatypeTriples) throws IOException, ParserException{
 		countFiles++;
 		File fNT = map2NT(mDatatypeTriples);
 		// Configuration variables
@@ -48,7 +54,7 @@ public class WimuUtil {
 		String rdfInput = fNT.getAbsolutePath();
 		String inputType = "ntriples";
 		//String hdtOutput = "/path/to/dataset.hdt";
-		String hdtOutput = "hdt/" + countFiles + "_" + fNT.getName().replaceAll(".nt", ".hdt");
+		String hdtOutput = "hdt/" + fNT.getName().replaceAll(".nt", ".hdt");
 
 		// Create HDT from RDF file
 		HDT hdt = HDTManager.generateHDT(rdfInput, baseURI, RDFNotation.parse(inputType), new HDTSpecification(), null);
@@ -61,15 +67,14 @@ public class WimuUtil {
 			hdt.close();
 			fNT.delete();
 		}
-		
-		return triples;
 	}
 	
-	private static File map2NT(ConcurrentHashMap<String, Integer> maps) {
+	public static File map2NT(ConcurrentHashMap<String, Integer> maps) throws IOException {
 		File ret = new File("hdt/" + countFiles + "_temp.nt");
+		ret.createNewFile();
 		System.out.println("Generating file: " + ret.getAbsolutePath());
 		try {
-			PrintWriter writer = new PrintWriter(ret.getName(), "UTF-8");
+			PrintWriter writer = new PrintWriter(ret.getAbsolutePath(), "UTF-8");
 			maps.forEach((uriDataset, dTypes) -> {
 				writer.println(uriDataset + " \"" + dTypes + "\"^^<http://www.w3.org/2001/XMLSchema#int> .");
 			});
@@ -78,7 +83,7 @@ public class WimuUtil {
 			e.printStackTrace();
 		}
 		System.out.println("File generated: " + ret.getAbsolutePath());
-		return null;
+		return ret;
 	}
 
 	public static Set<String> getAlreadyProcessed(String logFileName) throws IOException {
