@@ -9,6 +9,8 @@ Our service aims at indexing URIs and their use in order to let Linked Data cons
 We rank the corresponding datasets by following the rationale upon which a dataset contributes to the definition of a URI proportionally to the number of datatype triples.
 We finally show use-cases of applications that can immediately benefit from our simple yet useful service.
 
+## [The manual](https://docs.google.com/document/d/e/2PACX-1vTScPtFq0k1hHvSgColYga5Vt-_69WVsrKkwsf3R7JOsrCVehkVOWKevf8Amjh2zYqLLq9zMENQUe-Q/pub)
+
 # Requirements
 -`Java 8`.
 
