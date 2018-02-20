@@ -1,0 +1,679 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>Where is my URI?</title>
+
+    <style>
+      .highlight table td { padding: 5px; }
+.highlight table pre { margin: 0; }
+.highlight, .highlight .w {
+  color: #f8f8f2;
+  background-color: #272822;
+}
+.highlight .err {
+  color: #151515;
+  background-color: #ac4142;
+}
+.highlight .c, .highlight .cd, .highlight .cm, .highlight .c1, .highlight .cs {
+  color: #505050;
+}
+.highlight .cp {
+  color: #f4bf75;
+}
+.highlight .nt {
+  color: #f4bf75;
+}
+.highlight .o, .highlight .ow {
+  color: #d0d0d0;
+}
+.highlight .p, .highlight .pi {
+  color: #d0d0d0;
+}
+.highlight .gi {
+  color: #90a959;
+}
+.highlight .gd {
+  color: #ac4142;
+}
+.highlight .gh {
+  color: #6a9fb5;
+  background-color: #151515;
+  font-weight: bold;
+}
+.highlight .k, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv {
+  color: #aa759f;
+}
+.highlight .kc {
+  color: #d28445;
+}
+.highlight .kt {
+  color: #d28445;
+}
+.highlight .kd {
+  color: #d28445;
+}
+.highlight .s, .highlight .sb, .highlight .sc, .highlight .sd, .highlight .s2, .highlight .sh, .highlight .sx, .highlight .s1 {
+  color: #90a959;
+}
+.highlight .sr {
+  color: #75b5aa;
+}
+.highlight .si {
+  color: #8f5536;
+}
+.highlight .se {
+  color: #8f5536;
+}
+.highlight .nn {
+  color: #f4bf75;
+}
+.highlight .nc {
+  color: #f4bf75;
+}
+.highlight .no {
+  color: #f4bf75;
+}
+.highlight .na {
+  color: #6a9fb5;
+}
+.highlight .m, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo, .highlight .mb, .highlight .mx {
+  color: #90a959;
+}
+.highlight .ss {
+  color: #90a959;
+}
+    </style>
+    <link href="stylesheets/screen.css" rel="stylesheet" media="screen" />
+    <link href="stylesheets/print.css" rel="stylesheet" media="print" />
+      <script src="javascripts/all.js"></script>
+  </head>
+
+  <body class="index" data-languages="[&quot;json&quot;]">
+    <a href="#" id="nav-button">
+      <span>
+        NAV
+        <img src="images/navbar.png" />
+      </span>
+    </a>
+    <div class="tocify-wrapper">
+      <img src="images/logo.png" />
+        <div class="lang-selector">
+              <a href="#" data-language-name="json">json</a>
+        </div>
+        <div class="search">
+          <input type="text" class="search" id="input-search" placeholder="Search">
+        </div>
+        <ul class="search-results"></ul>
+      <div id="toc">
+      </div>
+        <ul class="toc-footer">
+            <li>API for &copy; WIMU v0.2</li>
+            <li><a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a></li>
+        </ul>
+    </div>
+    <div class="page-wrapper">
+      <div class="dark-box"></div>
+      <div class="content">
+        <h1 id="introduction">Introduction</h1>
+
+<p>Welcome to Where is my URI(WIMU) API! </p>
+
+<p>Where is my URI? is a service where the input is a URI and the output is a rank of datasets where this URI most likely was defined.</p>
+
+<p>WIMU rank the corresponding datasets by following the rationale upon which a dataset contributes to the definition of a URI proportionally to the number of literals.</p>
+
+<p>All the data from comes from [LODStats] and LODLoundromat.</p>
+
+<p>Simplifying, Concise Bounded Descriptions (CBDs) are all occurrences of a URI in a dataset. In other words, the occurrences where the URI appears in the Subject or the Object. For more a complete description see (https://www.w3.org/Submission/CBD/).</p>
+
+<h1 id="authentication">Authentication</h1>
+
+<p>To authorize, just append the API key provided via email to each request:</p>
+
+<p><code class="prettyprint">https://&lt;endpoint&gt;?&lt;query&gt;&amp;api_key=&lt;apikey&gt;</code></p>
+
+<h1 id="endpoints">Endpoints</h1>
+
+<h2 id="add-new-customer">Add new customer</h2>
+
+<blockquote>
+<p>The returned data is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"customer_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer name already in use."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Create a new customer. An assigned identifier is returned as JSON data.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p><code class="prettyprint">POST https://&lt;endpoint&gt;/addcustomer</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>customer_name</td>
+<td>-</td>
+<td>The customer name, which must be unique.</td>
+</tr>
+<tr>
+<td>search_terms</td>
+<td>-</td>
+<td>Terms for the search on Twitter, separated by <code class="prettyprint">\n</code>.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+<h2 id="edit-customer">Edit customer</h2>
+
+<blockquote>
+<p>The returned data is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer identifier not found."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Edit customer details.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p><code class="prettyprint">POST https://&lt;endpoint&gt;/editcustomer</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>customer_id</td>
+<td>-</td>
+<td>The customer internal identifier.</td>
+</tr>
+<tr>
+<td>customer_name</td>
+<td>null</td>
+<td>The customer name. If <code class="prettyprint">null</code>, the old value will be preserved.</td>
+</tr>
+<tr>
+<td>search_terms</td>
+<td>null</td>
+<td>Terms for the search on Twitter, separated by <code class="prettyprint">\n</code>. If <code class="prettyprint">null</code>, the old value will be preserved.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+<h2 id="delete-customer">Delete customer</h2>
+
+<blockquote>
+<p>The returned data is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer identifier not found."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Delete customer and all data associated with it.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p><code class="prettyprint">DELETE https://&lt;endpoint&gt;/deletecustomer</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>customer_id</td>
+<td>-</td>
+<td>The customer internal identifier.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+<h2 id="upload-json-tweets-into-db">Upload JSON tweets into DB</h2>
+
+<blockquote>
+<p>The returned data contains the identifier associated with the run; it is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"run_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"JSON file could not be parsed."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Upload JSON file containing tweets into the database. Sentiment will be predicted using the default model.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p>This is a <code class="prettyprint">POST</code> request using <code class="prettyprint">multipart/form-data</code> content type.</p>
+
+<p><code class="prettyprint">POST https://&lt;endpoint&gt;/uploadjson</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>target_file</td>
+<td>-</td>
+<td>The target file in <code class="prettyprint">multipart/form-data</code> encryption. The file extension can be either <code class="prettyprint">.json</code> or <code class="prettyprint">.zip</code> (a zip file containing compressed JSON files).</td>
+</tr>
+<tr>
+<td>customer_id</td>
+<td>-</td>
+<td>The customer internal identifier.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+<h2 id="start-crawler">Start crawler</h2>
+
+<blockquote>
+<p>The returned data is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"run_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">234</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Crawler could not start."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Start the crawler for a given customer, loading crawled tweets into the database.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p><code class="prettyprint">GET https://&lt;endpoint&gt;/startcrawler</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>customer_id</td>
+<td>-</td>
+<td>The customer internal identifier.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+<h2 id="stop-crawler">Stop crawler</h2>
+
+<blockquote>
+<p>The returned data is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Crawler was not running."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Stop the crawler for a given run.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p><code class="prettyprint">GET https://&lt;endpoint&gt;/stopcrawler</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>run_id</td>
+<td>-</td>
+<td>The run internal identifier.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+<h2 id="compute-indexes">Compute indexes</h2>
+
+<blockquote>
+<p>The returned data is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer not found."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Start the index computation for a given customer, on a given language. Indexes are then saved into the database.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p><code class="prettyprint">GET https://&lt;endpoint&gt;/indexes</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>customer_id</td>
+<td>-</td>
+<td>The customer internal identifier.</td>
+</tr>
+<tr>
+<td>language</td>
+<td>en</td>
+<td>The language identifier (e.g. &ldquo;en&rdquo;, &ldquo;de&rdquo;, &ldquo;it&rdquo;).</td>
+</tr>
+<tr>
+<td>count_tweets</td>
+<td>true</td>
+<td>Perform tweet count by label during hashtag analysis.</td>
+</tr>
+<tr>
+<td>interval</td>
+<td>604800</td>
+<td>Index time interval in seconds. Values: 1 week (default) = 604800; 1 day = 86400; 1 hour = 3600.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+<h2 id="check-index-computation">Check index computation</h2>
+
+<blockquote>
+<p>The returned data is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"computation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"done"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer not found."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Check whether an index computation is done or still running.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p><code class="prettyprint">GET https://&lt;endpoint&gt;/indexcomputation</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>customer_id</td>
+<td>-</td>
+<td>The customer internal identifier.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+<h2 id="compute-influencers-within-an-interval">Compute influencers within an interval</h2>
+
+<blockquote>
+<p>The returned data is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer not found."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Compute influencers for a given customer within an interval.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p><code class="prettyprint">GET https://&lt;endpoint&gt;/influencers</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>customer_id</td>
+<td>-</td>
+<td>The customer internal identifier.</td>
+</tr>
+<tr>
+<td>language</td>
+<td>en</td>
+<td>The language identifier (e.g. &ldquo;en&rdquo;, &ldquo;de&rdquo;, &ldquo;it&rdquo;).</td>
+</tr>
+<tr>
+<td>start_time</td>
+<td>-</td>
+<td>Start time in format &lsquo;YYYY-MM-DD HH:MM:SS&rsquo;.</td>
+</tr>
+<tr>
+<td>end_time</td>
+<td>-</td>
+<td>End time in format &#39;YYYY-MM-DD HH:MM:SS&rsquo;.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+<h2 id="upload-and-correlate-time-series">Upload and correlate time series</h2>
+
+<blockquote>
+<p>The returned data is structured like this:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<blockquote>
+<p>In case of exceptions, a message is attached. Example:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">{</span><span class="w">
+  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer not found."</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+
+<p>Upload file with outcomes as time series and correlate them with the general sentiment trend for a given customer. This endpoint triggers the general sentiment trend computation for a customer.</p>
+
+<h3 id="http-request">HTTP Request</h3>
+
+<p>This is a <code class="prettyprint">POST</code> request using <code class="prettyprint">multipart/form-data</code> content type.</p>
+
+<p><code class="prettyprint">POST https://&lt;endpoint&gt;/correlate</code></p>
+
+<h3 id="query-parameters">Query Parameters</h3>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>outcome_file</td>
+<td>-</td>
+<td>The outcome file in <code class="prettyprint">multipart/form-data</code> encryption. The file must be in <code class="prettyprint">.txt</code> format and have a header like the following: <code class="prettyprint">length&lt;tab&gt;#</code> (where <code class="prettyprint">length</code> is the number of data points).</td>
+</tr>
+<tr>
+<td>customer_id</td>
+<td>-</td>
+<td>The customer internal identifier.</td>
+</tr>
+<tr>
+<td>api_key</td>
+<td>-</td>
+<td>The WIMU API key.</td>
+</tr>
+</tbody></table>
+
+      </div>
+      <div class="dark-box">
+          <div class="lang-selector">
+                <a href="#" data-language-name="json">json</a>
+          </div>
+      </div>
+    </div>
+  </body>
+</html>
