@@ -117,55 +117,108 @@
     <div class="page-wrapper">
       <div class="dark-box"></div>
       <div class="content">
-        <h1 id="introduction">Introduction</h1>
+        <h1 id="what-is-wimu">What is WIMU?</h1>
 
-<p>Welcome to Where is my URI(WIMU) API! </p>
+<p>Welcome to WIMU API! </p>
 
-<p>Where is my URI? is a service where the input is a URI and the output is a rank of datasets where this URI most likely was defined.</p>
+<p>Where is my URI?(WIMU) is a service where the input is a URI and the output is a rank of datasets where this URI most likely was defined.</p>
 
 <p>WIMU rank the corresponding datasets by following the rationale upon which a dataset contributes to the definition of a URI proportionally to the number of literals.</p>
 
-<p>All the data from comes from [LODStats] and LODLoundromat.</p>
+<p>All the data from comes from <a href="http://lodstats.aksw.org/">LODStats</a> and <a href="http://lodlaundromat.org/">LODLoundromat</a>.</p>
 
 <p>Simplifying, Concise Bounded Descriptions (CBDs) are all occurrences of a URI in a dataset. In other words, the occurrences where the URI appears in the Subject or the Object. For more a complete description see (https://www.w3.org/Submission/CBD/).</p>
 
-<h1 id="authentication">Authentication</h1>
+<h1 id="wimu-is-able-to">Wimu is able to</h1>
 
-<p>To authorize, just append the API key provided via email to each request:</p>
+<p>-Find datasets for a given URI or many URIs (in case, a linkset).
+<br>-Generate CBDs for a given URI and Dataset.</p>
 
-<p><code class="prettyprint">https://&lt;endpoint&gt;?&lt;query&gt;&amp;api_key=&lt;apikey&gt;</code></p>
+<h1 id="how-to-use-wimu">How to use WIMU</h1>
 
-<h1 id="endpoints">Endpoints</h1>
+<h2 id="the-web-interface">The web interface</h2>
 
-<h2 id="add-new-customer">Add new customer</h2>
+<p>The web interface is based on two parameters, the URI and the the top occurrences. The output is a HTML table showing the datasets and his provenances, allowing download the datasets and generating the CBDs for the given URI.</p>
+
+<p align="center"><img src="images/wimu1.png" width=700 alt="Screenshot of Example Documentation created with Slate"></p>
+
+<p align="center"><img src="images/wimu2.png" width=700 alt="Screenshot of Example Documentation created with Slate"></p>
+
+<h2 id="the-service-api-wimu-with-json">The service API (WIMU with JSON)</h2>
+
+<p align="center"><img src="images/wimuTerminal.png" width=700 alt="Screenshot of Example Documentation created with Slate"></p>
+
+<p>The service API provides a JSON as output, allowing users to use WIMU with some programing language compatible with JSON. </p>
+
+<p>Now will be presented some examples of how to use:</p>
+
+<h3 id="single-uri">Single URI</h3>
+
+<p>This example returns the top 5 occurrences of Datasets related to the given URI, sorted by number of literals.</p>
+
+<p><strong>Service</strong>: <code class="prettyprint">https://w3id.org/where-is-my-uri/Find</code></p>
+
+<p><strong>Parameters</strong></p>
+
+<table><thead>
+<tr>
+<th>Parameter</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr>
+<td>top</td>
+<td>0</td>
+<td>Top ocurrences of the datasets where the URI was defined.</td>
+</tr>
+<tr>
+<td>uri</td>
+<td>-</td>
+<td>URI expected to search .</td>
+</tr>
+</tbody></table>
 
 <blockquote>
-<p>The returned data is structured like this:</p>
+<p><strong>Input</strong> (Single URI example): </p>
 </blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"customer_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">81</span><span class="w">
+
+<p><code class="prettyprint">https://w3id.org/where-is-my-uri/Find?top=5&amp;uri=http://dbpedia.org/resource/Leipzig</code></p>
+
+<blockquote>
+<p><strong>Output</strong>:</p>
+</blockquote>
+<pre class="highlight json"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"dataset"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://downloads.dbpedia.org/2016-10/core-i18n/en/infobox_properties_en.ttl.bz2"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"CountLiteral"</span><span class="p">:</span><span class="w"> </span><span class="s2">"236"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"dataset"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://gaia.infor.uva.es/hdt/dbpedia2015.hdt.gz"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"CountLiteral"</span><span class="p">:</span><span class="w"> </span><span class="s2">"165"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"dataset"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://download.lodlaundromat.org/a9dabf348fd6262edfbbcf7256b0f839?type=hdt"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"CountLiteral"</span><span class="p">:</span><span class="w"> </span><span class="s2">"142"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nt">"dataset"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://download.lodlaundromat.org/dde1dcc095b38a1b65ebfbc7696d7998?type=hdt"</span><span class="p">,</span><span class="w">
+    </span><span class="nt">"CountLiteral"</span><span class="p">:</span><span class="w"> </span><span class="s2">"124"</span><span class="w">
   </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
 </span></code></pre>
 
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer name already in use."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
+<h3 id="working-with-linksets-more-than-one-uri">Working with Linksets (more than one URI)</h3>
 
-<p>Create a new customer. An assigned identifier is returned as JSON data.</p>
+<p>The most practical case that we have found to work with many URIs was using linksets, (very simplistic talking), that are mappings of resources from different datasets, in the most of cases generated by some Linkset framework such as LIMES, SILK, among others.</p>
 
-<h3 id="http-request">HTTP Request</h3>
+<p>We use linksets from the most used linkset repository on the web called <a href="http://www.linklion.org">LinkLion</a>.</p>
 
-<p><code class="prettyprint">POST https://&lt;endpoint&gt;/addcustomer</code></p>
+<p>The input is a URL from a linkset and the output is a set containing the URIs source and target, respective datasets with more datatypes and number of datatypes.</p>
 
-<h3 id="query-parameters">Query Parameters</h3>
+<p><strong>Service</strong>: https://w3id.org/where-is-my-uri/Find</p>
+
+<p><strong>Parameters</strong></p>
 
 <table><thead>
 <tr>
@@ -175,48 +228,69 @@
 </tr>
 </thead><tbody>
 <tr>
-<td>customer_name</td>
+<td>link</td>
 <td>-</td>
-<td>The customer name, which must be unique.</td>
-</tr>
-<tr>
-<td>search_terms</td>
-<td>-</td>
-<td>Terms for the search on Twitter, separated by <code class="prettyprint">\n</code>.</td>
-</tr>
-<tr>
-<td>api_key</td>
-<td>-</td>
-<td>The WIMU API key.</td>
+<td>URL from a linkset and the output is a set containing the URIs source and target, respective datasets with more datatypes and number of datatypes.</td>
 </tr>
 </tbody></table>
 
-<h2 id="edit-customer">Edit customer</h2>
+<blockquote>
+<p><strong>Input</strong> (Multiple URIs(Linkset) example): </p>
+</blockquote>
+
+<p><code class="prettyprint">https://w3id.org/where-is-my-uri/Find?link=http://www.linklion.org/download/mapping/sws.geonames.org---purl.org.nt</code></p>
 
 <blockquote>
-<p>The returned data is structured like this:</p>
+<p><strong>Output</strong>:</p>
 </blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
-</span><span class="p">}</span><span class="w">
+<pre class="highlight json"><code><span class="p">[</span><span class="w">
+
+  </span><span class="p">{</span><span class="w">
+
+    </span><span class="nt">"datasetS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://lrd900.d2s.labs.vu.nl/all-geonames-2010-11-28_cleaned.n3.bz2"</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"uriS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://sws.geonames.org/4896861/"</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"hdtS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://download.lodlaundromat.org/7d24b8cc9fb5255d8d53dee3138c56d3?type\u003dhdt"</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"datasetT"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"uriT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://purl.org/NET/marccodes/countries/ilu#location"</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"cDatatypesS"</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"cDatatypesT"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w">
+
+  </span><span class="p">},</span><span class="w">
+
+  </span><span class="p">{</span><span class="w">
+
+    </span><span class="nt">"datasetS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://km.aifb.kit.edu/projects/btc-2009/btc-2009-chunk-049.gz"</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"uriS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://sws.geonames.org/4921868/"</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"hdtS"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://download.lodlaundromat.org/e1c04c1c0b740844b189fecd5fb2c7a7?type\u003dhdt"</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"datasetT"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"uriT"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://purl.org/NET/marccodes/gacs/n-us-in#location"</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"cDatatypesS"</span><span class="p">:</span><span class="w"> </span><span class="mi">13</span><span class="p">,</span><span class="w">
+
+    </span><span class="nt">"cDatatypesT"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="w">
+
+  </span><span class="p">},</span><span class="w">
+
+</span><span class="err">...more</span><span class="w"> </span><span class="err">elements</span><span class="w"> </span><span class="err">omitted...</span><span class="w">
 </span></code></pre>
 
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer identifier not found."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
+<h3 id="generating-cbds">Generating CBDs</h3>
 
-<p>Edit customer details.</p>
+<p>The input is the URI of the CBD and the URL to download the dataset. The output is the CBD in  N-triple format.</p>
 
-<h3 id="http-request">HTTP Request</h3>
+<p><strong>Service</strong>: <code class="prettyprint">https://w3id.org/where-is-my-uri/Find</code></p>
 
-<p><code class="prettyprint">POST https://&lt;endpoint&gt;/editcustomer</code></p>
-
-<h3 id="query-parameters">Query Parameters</h3>
+<p><strong>Parameters</strong></p>
 
 <table><thead>
 <tr>
@@ -226,447 +300,35 @@
 </tr>
 </thead><tbody>
 <tr>
-<td>customer_id</td>
+<td>cbd</td>
 <td>-</td>
-<td>The customer internal identifier.</td>
+<td>The URI where that will origin the CBD.</td>
 </tr>
 <tr>
-<td>customer_name</td>
-<td>null</td>
-<td>The customer name. If <code class="prettyprint">null</code>, the old value will be preserved.</td>
-</tr>
-<tr>
-<td>search_terms</td>
-<td>null</td>
-<td>Terms for the search on Twitter, separated by <code class="prettyprint">\n</code>. If <code class="prettyprint">null</code>, the old value will be preserved.</td>
-</tr>
-<tr>
-<td>api_key</td>
+<td>ds</td>
 <td>-</td>
-<td>The WIMU API key.</td>
+<td>URL to download the dataset .</td>
 </tr>
 </tbody></table>
 
-<h2 id="delete-customer">Delete customer</h2>
+<blockquote>
+<p><strong>Input</strong> (Generating CBDs):</p>
+</blockquote>
+
+<p><code class="prettyprint">https://w3id.org/where-is-my-uri/Find?cbd=http://dbpedia.org/resource/Leipzig&amp;ds=http://download.lodlaundromat.org/a9dabf348fd6262edfbbcf7256b0f839?type=hdt</code></p>
 
 <blockquote>
-<p>The returned data is structured like this:</p>
+<p><strong>Output</strong>:</p>
 </blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
-</span><span class="p">}</span><span class="w">
+<pre class="highlight json"><code><span class="err">&lt;http://dbpedia.org/resource/Leipzig&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/property/wikilink&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/resource/Leipziger_Neuseenland&gt;</span><span class="w"> </span><span class="err">.</span><span class="w">
+</span><span class="err">&lt;http://dbpedia.org/resource/Leipzig&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/property/wikilink&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/resource/æ‹¿ç</span><span class="w"> </span><span class="err">´ä»‘&gt;</span><span class="w"> </span><span class="err">.</span><span class="w">
+</span><span class="err">&lt;http://dbpedia.org/resource/Leipzig&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/property/wikilink&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/resource/German_Democratic_Republic&gt;</span><span class="w"> </span><span class="err">.</span><span class="w">
+</span><span class="err">&lt;http://dbpedia.org/resource/Leipzig&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/property/wikilink&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/resource/Werner_Heisenberg&gt;</span><span class="w"> </span><span class="err">.</span><span class="w">
+</span><span class="err">&lt;http://dbpedia.org/resource/Leipzig&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/property/wikilink&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/resource/ãƒ•ã‚§ãƒªãƒƒã‚¯ã‚¹ãƒ»ãƒ¡ãƒ³ãƒ‡ãƒ«ã‚¹ã‚¾ãƒ¼ãƒ³&gt;</span><span class="w"> </span><span class="err">.</span><span class="w">
+</span><span class="err">&lt;http://dbpedia.org/resource/Heinrich_Gustav_Reichenbach&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/property/wikilink&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/resource/Leipzig&gt;</span><span class="w"> </span><span class="err">.</span><span class="w">
+</span><span class="err">&lt;http://dbpedia.org/resource/Leipzig&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/property/wikilink&gt;</span><span class="w"> </span><span class="err">&lt;http://dbpedia.org/resource/Texas&gt;</span><span class="w"> </span><span class="err">.</span><span class="w">
+</span><span class="err">...more</span><span class="w"> </span><span class="err">elements</span><span class="w"> </span><span class="err">omitted...</span><span class="w">
 </span></code></pre>
-
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer identifier not found."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Delete customer and all data associated with it.</p>
-
-<h3 id="http-request">HTTP Request</h3>
-
-<p><code class="prettyprint">DELETE https://&lt;endpoint&gt;/deletecustomer</code></p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<table><thead>
-<tr>
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>customer_id</td>
-<td>-</td>
-<td>The customer internal identifier.</td>
-</tr>
-<tr>
-<td>api_key</td>
-<td>-</td>
-<td>The WIMU API key.</td>
-</tr>
-</tbody></table>
-
-<h2 id="upload-json-tweets-into-db">Upload JSON tweets into DB</h2>
-
-<blockquote>
-<p>The returned data contains the identifier associated with the run; it is structured like this:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"run_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"JSON file could not be parsed."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Upload JSON file containing tweets into the database. Sentiment will be predicted using the default model.</p>
-
-<h3 id="http-request">HTTP Request</h3>
-
-<p>This is a <code class="prettyprint">POST</code> request using <code class="prettyprint">multipart/form-data</code> content type.</p>
-
-<p><code class="prettyprint">POST https://&lt;endpoint&gt;/uploadjson</code></p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<table><thead>
-<tr>
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>target_file</td>
-<td>-</td>
-<td>The target file in <code class="prettyprint">multipart/form-data</code> encryption. The file extension can be either <code class="prettyprint">.json</code> or <code class="prettyprint">.zip</code> (a zip file containing compressed JSON files).</td>
-</tr>
-<tr>
-<td>customer_id</td>
-<td>-</td>
-<td>The customer internal identifier.</td>
-</tr>
-<tr>
-<td>api_key</td>
-<td>-</td>
-<td>The WIMU API key.</td>
-</tr>
-</tbody></table>
-
-<h2 id="start-crawler">Start crawler</h2>
-
-<blockquote>
-<p>The returned data is structured like this:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"run_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">234</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Crawler could not start."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Start the crawler for a given customer, loading crawled tweets into the database.</p>
-
-<h3 id="http-request">HTTP Request</h3>
-
-<p><code class="prettyprint">GET https://&lt;endpoint&gt;/startcrawler</code></p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<table><thead>
-<tr>
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>customer_id</td>
-<td>-</td>
-<td>The customer internal identifier.</td>
-</tr>
-<tr>
-<td>api_key</td>
-<td>-</td>
-<td>The WIMU API key.</td>
-</tr>
-</tbody></table>
-
-<h2 id="stop-crawler">Stop crawler</h2>
-
-<blockquote>
-<p>The returned data is structured like this:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Crawler was not running."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Stop the crawler for a given run.</p>
-
-<h3 id="http-request">HTTP Request</h3>
-
-<p><code class="prettyprint">GET https://&lt;endpoint&gt;/stopcrawler</code></p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<table><thead>
-<tr>
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>run_id</td>
-<td>-</td>
-<td>The run internal identifier.</td>
-</tr>
-<tr>
-<td>api_key</td>
-<td>-</td>
-<td>The WIMU API key.</td>
-</tr>
-</tbody></table>
-
-<h2 id="compute-indexes">Compute indexes</h2>
-
-<blockquote>
-<p>The returned data is structured like this:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer not found."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Start the index computation for a given customer, on a given language. Indexes are then saved into the database.</p>
-
-<h3 id="http-request">HTTP Request</h3>
-
-<p><code class="prettyprint">GET https://&lt;endpoint&gt;/indexes</code></p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<table><thead>
-<tr>
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>customer_id</td>
-<td>-</td>
-<td>The customer internal identifier.</td>
-</tr>
-<tr>
-<td>language</td>
-<td>en</td>
-<td>The language identifier (e.g. &ldquo;en&rdquo;, &ldquo;de&rdquo;, &ldquo;it&rdquo;).</td>
-</tr>
-<tr>
-<td>count_tweets</td>
-<td>true</td>
-<td>Perform tweet count by label during hashtag analysis.</td>
-</tr>
-<tr>
-<td>interval</td>
-<td>604800</td>
-<td>Index time interval in seconds. Values: 1 week (default) = 604800; 1 day = 86400; 1 hour = 3600.</td>
-</tr>
-<tr>
-<td>api_key</td>
-<td>-</td>
-<td>The WIMU API key.</td>
-</tr>
-</tbody></table>
-
-<h2 id="check-index-computation">Check index computation</h2>
-
-<blockquote>
-<p>The returned data is structured like this:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"data"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="nt">"computation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"done"</span><span class="w">
-  </span><span class="p">}</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer not found."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Check whether an index computation is done or still running.</p>
-
-<h3 id="http-request">HTTP Request</h3>
-
-<p><code class="prettyprint">GET https://&lt;endpoint&gt;/indexcomputation</code></p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<table><thead>
-<tr>
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>customer_id</td>
-<td>-</td>
-<td>The customer internal identifier.</td>
-</tr>
-<tr>
-<td>api_key</td>
-<td>-</td>
-<td>The WIMU API key.</td>
-</tr>
-</tbody></table>
-
-<h2 id="compute-influencers-within-an-interval">Compute influencers within an interval</h2>
-
-<blockquote>
-<p>The returned data is structured like this:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer not found."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Compute influencers for a given customer within an interval.</p>
-
-<h3 id="http-request">HTTP Request</h3>
-
-<p><code class="prettyprint">GET https://&lt;endpoint&gt;/influencers</code></p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<table><thead>
-<tr>
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>customer_id</td>
-<td>-</td>
-<td>The customer internal identifier.</td>
-</tr>
-<tr>
-<td>language</td>
-<td>en</td>
-<td>The language identifier (e.g. &ldquo;en&rdquo;, &ldquo;de&rdquo;, &ldquo;it&rdquo;).</td>
-</tr>
-<tr>
-<td>start_time</td>
-<td>-</td>
-<td>Start time in format &lsquo;YYYY-MM-DD HH:MM:SS&rsquo;.</td>
-</tr>
-<tr>
-<td>end_time</td>
-<td>-</td>
-<td>End time in format &#39;YYYY-MM-DD HH:MM:SS&rsquo;.</td>
-</tr>
-<tr>
-<td>api_key</td>
-<td>-</td>
-<td>The WIMU API key.</td>
-</tr>
-</tbody></table>
-
-<h2 id="upload-and-correlate-time-series">Upload and correlate time series</h2>
-
-<blockquote>
-<p>The returned data is structured like this:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<blockquote>
-<p>In case of exceptions, a message is attached. Example:</p>
-</blockquote>
-<pre class="highlight json"><code><span class="p">{</span><span class="w">
-  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span><span class="w">
-  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Customer not found."</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-
-<p>Upload file with outcomes as time series and correlate them with the general sentiment trend for a given customer. This endpoint triggers the general sentiment trend computation for a customer.</p>
-
-<h3 id="http-request">HTTP Request</h3>
-
-<p>This is a <code class="prettyprint">POST</code> request using <code class="prettyprint">multipart/form-data</code> content type.</p>
-
-<p><code class="prettyprint">POST https://&lt;endpoint&gt;/correlate</code></p>
-
-<h3 id="query-parameters">Query Parameters</h3>
-
-<table><thead>
-<tr>
-<th>Parameter</th>
-<th>Default</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr>
-<td>outcome_file</td>
-<td>-</td>
-<td>The outcome file in <code class="prettyprint">multipart/form-data</code> encryption. The file must be in <code class="prettyprint">.txt</code> format and have a header like the following: <code class="prettyprint">length&lt;tab&gt;#</code> (where <code class="prettyprint">length</code> is the number of data points).</td>
-</tr>
-<tr>
-<td>customer_id</td>
-<td>-</td>
-<td>The customer internal identifier.</td>
-</tr>
-<tr>
-<td>api_key</td>
-<td>-</td>
-<td>The WIMU API key.</td>
-</tr>
-</tbody></table>
 
       </div>
       <div class="dark-box">
