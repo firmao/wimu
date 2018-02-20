@@ -326,12 +326,15 @@
 
 <h2 id="an-example-with-java">An example with Java</h2>
 
+<p>This example with <a href="https://java.com">Java</a> and the API <a href="https://github.com/google/gson">Gson</a>. </p>
+
 <p>See the example beside:</p>
 <pre class="highlight java"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">exampleJson</span><span class="p">(</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
     <span class="n">URL</span> <span class="n">url</span> <span class="o">=</span> <span class="k">new</span> <span class="n">URL</span><span class="o">(</span><span class="s">"https://w3id.org/where-is-my-uri/Find?uri=http://dbpedia.org/resource/Leipzig"</span><span class="o">);</span>
     <span class="n">InputStreamReader</span> <span class="n">reader</span> <span class="o">=</span> <span class="k">new</span> <span class="n">InputStreamReader</span><span class="o">(</span><span class="n">url</span><span class="o">.</span><span class="na">openStream</span><span class="o">());</span>
     <span class="n">WIMUDataset</span> <span class="n">wData</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Gson</span><span class="o">().</span><span class="na">fromJson</span><span class="o">(</span><span class="n">reader</span><span class="o">,</span> <span class="n">WIMUDataset</span><span class="o">[].</span><span class="na">class</span><span class="o">)[</span><span class="mi">0</span><span class="o">];</span>
-    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">wData</span><span class="o">);</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Dataset:"</span> <span class="o">+</span> <span class="n">wData</span><span class="o">.</span><span class="na">getDataset</span><span class="o">());</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Dataset(HDT):"</span> <span class="o">+</span> <span class="n">wData</span><span class="o">.</span><span class="na">getHdt</span><span class="o">());</span>
 <span class="o">}</span>
 
 <span class="c1">//the class WIMUDataset:</span>
