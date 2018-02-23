@@ -57,6 +57,6 @@ public class WIMUri {
 	}
 	@Override
 	public String toString() {
-		return "Source(" + getUriS() + "," + getDatasetS() + "),Target(" + getUriT() + "," + getDatasetT() + ")";
+		return "Source(" + getUriS() + "," + ((getDatasetS() != null) ? getDatasetS() : getHdtS())  + "),Target(" + getUriT() + "," + ((getDatasetT() != null) ? getDatasetT() : getHdtT()) + ")";
 	}
 }

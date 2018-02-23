@@ -1,7 +1,12 @@
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -10,11 +15,17 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.jena.atlas.logging.LogCtl;
+import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
@@ -23,22 +34,30 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.impl.ModelCom;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFParserBuilder;
 import org.apache.jena.riot.system.StreamRDF;
 import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdtjena.HDTGraph;
+import org.tukaani.xz.XZInputStream;
 
 import com.google.gson.Gson;
 
 public class Main {
 
-	static final String WIMUservice = "http://dmoussallem.ddns.net:1550/LinkLion2_WServ/Find?uri=";
+	//static final String WIMUservice = "http://dmoussallem.ddns.net:1550/LinkLion2_WServ/Find?uri=";
+	//static final String WIMUservice = "http://139.18.2.39:8122/Find?uri="; // akswnc9
+	
+	static final String WIMUservice = "http://localhost:8080/LinkLion2_WServ/Find?uri=";
 	// static final String WIMUservice =
 	// "http://dmoussallem.ddns.net:1550/LinkLion2_WServ/Find?link=";
 	// static final String WIMUservice =
@@ -111,6 +130,9 @@ public class Main {
 		org.apache.log4j.Logger.getRootLogger().setLevel(org.apache.log4j.Level.OFF);
 		System.out.println("Parallel version: Starting to using WIMU to find datasets from URIs.");
 
+		int processors = Runtime.getRuntime().availableProcessors();
+		System.out.println("Core processors: " + processors);
+		
 		long start = System.currentTimeMillis();
 		// String linkset =
 		// "http://139.18.8.58:8080/LinkLion2_WServ/Find?link=http://www.linklion.org/download/mapping/sws.geonames.org---purl.org.nt";
@@ -347,6 +369,7 @@ public class Main {
 			linksets.add(urlRepository + "sws.geonames.org---purl.org.nt");
 			linksets.add(urlRepository + "citeseer.rkbexplorer.com---nsf.rkbexplorer.com.nt");
 			linksets.add(urlRepository + "AGROVOC.nt---agclass.nal.usda.gov.nt");
+			linksets.add(urlRepository + "purl.org---xmlns.com.nt"); // just 1 link
 		} else {
 			try {
 				org.jsoup.nodes.Document doc = Jsoup.connect(urlRepository).get();
@@ -386,15 +409,118 @@ public class Main {
 			cbd = getCBDHDT(uri, urlHDT);
 		}
 		if ((cbd != null) && (cbd.size() < 1) && (urlDataset != null) && (urlDataset.length() > 1)) {
-			System.out.println("<IMPLEMENT !!!>NON HDT: " + urlDataset);
-			// cbd = getCBDDataset(uri,urlDataset);
+			//System.out.println("<IMPLEMENT !!!>NON HDT: " + urlDataset);
+			cbd = getCBDDataset(uri,urlDataset);
 		}
 		return cbd;
 	}
 
 	private static Set<String> getCBDDataset(String uri, String urlDataset) throws Exception {
 		Set<String> ret = new HashSet<String>();
-		throw new Exception("NEED TO IMPLEMENT");
+		File file = null;
+		try {
+			URL url = new URL(urlDataset);
+			file = new File(getURLFileName(url));
+			FileUtils.copyURLToFile(url, file);
+			file = unconpress(file);
+			StreamRDF reader = new StreamRDF() {
+
+				@Override
+				public void base(String arg0) {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void finish() {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void prefix(String arg0, String arg1) {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void quad(Quad arg0) {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void start() {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public synchronized void triple(Triple triple) {
+					String predicate = triple.getPredicate().getURI();
+					if(predicate.endsWith("rdf-syntax-ns#type")){
+						predicate = "http://www.w3.org/2002/07/owl#Thing";
+					}
+					if(predicate.endsWith("sameAs")) return;
+					String nTriple = "<" + triple.getSubject().getURI() + "> <" + predicate + ">";
+					if (triple.getObject().isLiteral()) {
+						nTriple += " \"" + triple.getObject().getLiteral().toString() + "\"^^<"
+								+ triple.getObject().getLiteral().getDatatypeURI() + "> .";
+					} else {
+						nTriple += " <" + triple.getObject().getURI() + "> .";
+					}
+					ret.add(nTriple);
+				}
+			};
+			RDFParserBuilder a = RDFParserBuilder.create();
+			if (file.getName().endsWith(".tql")) {
+				//RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NQUADS);
+				a.forceLang(Lang.NQUADS);
+			} else if (file.getName().endsWith(".ttl")) {
+				//RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.TTL);
+				a.forceLang(Lang.TTL);
+			} else if (file.getName().endsWith(".nt")) {
+				//RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NT);
+				a.forceLang(Lang.NT);
+			} else if (file.getName().endsWith(".nq")) {
+				//RDFDataMgr.parse(reader, fUnzip.getAbsolutePath(), Lang.NQ);
+				a.forceLang(Lang.NQ);
+			} else {
+				//RDFDataMgr.parse(reader, fUnzip.getAbsolutePath());
+				a.forceLang(Lang.RDFXML);
+			}
+			Scanner in = null;
+			try {
+				in = new Scanner(file);
+				while(in.hasNextLine()) {
+					a.source(new StringReader(in.nextLine()));
+					try {
+						a.parse(reader);
+					} catch (Exception e) {
+						//e.printStackTrace();
+					}
+				}
+				in.close();
+			} catch (FileNotFoundException e) {
+				//e.printStackTrace();
+			}
+			file.delete();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return ret;
+		//throw new Exception("NEED TO IMPLEMENT");
+	}
+	
+	private static String toNTNotation(RDFNode s, RDFNode p, RDFNode o) {
+		String nTriple = "<" + s.toString() + "> <" + p.toString() + ">";
+		if (o.isLiteral()) {
+			nTriple += " \"" + o.asLiteral().toString() + "\"^^<"
+					+ o.asLiteral().getDatatypeURI() + "> .";
+		} else {
+			nTriple += " <" + o.toString() + "> .";
+		}
+		return nTriple;
 	}
 
 	private static Set<String> getCBDHDT(String uri, String urlHDT) throws IOException {
@@ -414,17 +540,22 @@ public class Main {
 			QueryExecution qe = QueryExecutionFactory.create(query, model);
 			ResultSet results = qe.execSelect();
 
+			HashSet<String> instances = new HashSet<>();
 			while (results.hasNext()) {
 				QuerySolution thisRow = results.next();
+				String predicate = thisRow.get("p").toString();
+				if(predicate.endsWith("sameAs")) continue;
+				if(thisRow.get("o").toString().startsWith("http://lodlaundromat.org/.well-known/genid")) continue;
+				if(thisRow.get("s").toString().startsWith("http://lodlaundromat.org/.well-known/genid")) continue;
 				// uriDataset = thisRow.get("s").toString() + "\t" +
 				// file.getDataset();
-				String nTriple = "<" + thisRow.get("s").toString() + "> <" + thisRow.get("p").toString() + ">";
-				if (thisRow.get("o").isLiteral()) {
-					nTriple += " \"" + thisRow.get("o").asLiteral().toString() + "\"^^<"
-							+ thisRow.get("o").asLiteral().getDatatypeURI() + "> .";
-				} else {
-					nTriple += " <" + thisRow.get("o").toString() + "> .";
+				//String object = thisRow.get("o").toString();
+				if(predicate.equals(RDF.type.getURI())) {
+					boolean firstVisit = instances.add(thisRow.get("s").toString());
+					if(firstVisit)
+						ret.add(toNTNotation(thisRow.get("s"), RDF.type, OWL.Thing));
 				}
+				String nTriple = toNTNotation(thisRow.get("s"), thisRow.get("p"), thisRow.get("o"));
 				ret.add(nTriple);
 			}
 			qe.close();
@@ -460,5 +591,138 @@ public class Main {
 		}
 
 		return wData;
+	}
+	
+	private static ResultComp compareLinkSets(File fLinkLionSet, File fWombatSet){
+		ResultComp res = new ResultComp();
+		//Map<String, Set<String>> mLinkLion = getGraph(fLinkLionSet); 
+		StreamRDF reader = new StreamRDF() {
+
+			@Override
+			public void base(String arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void finish() {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void prefix(String arg0, String arg1) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void quad(Quad arg0) {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public void start() {
+				// TODO Auto-generated method stub
+
+			}
+
+			@Override
+			public synchronized void triple(Triple triple) {
+				String dSource = triple.getSubject().toString();
+				String dTarget = triple.getObject().toString();
+				//if()
+			}
+		};
+		RDFDataMgr.parse(reader, fWombatSet.getAbsolutePath(), Lang.NT);
+		
+		try{
+			fWombatSet.delete();
+			fLinkLionSet.delete();
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+		
+		return res;
+	}
+	
+	private static File unconpress(File file) {
+		File ret = file;
+		try {
+			File fUnzip = null;
+			if (file.getName().endsWith(".bz2"))
+				fUnzip = new File(file.getName().replaceAll(".bz2", ""));
+			else if (file.getName().endsWith(".xz"))
+				fUnzip = new File(file.getName().replaceAll(".xz", ""));
+			else if (file.getName().endsWith(".zip"))
+				fUnzip = new File(file.getName().replaceAll(".zip", ""));
+			else if (file.getName().endsWith(".tar.gz"))
+				fUnzip = new File(file.getName().replaceAll(".tar.gz", ""));
+			else
+				return file;
+
+			BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+			FileOutputStream out = new FileOutputStream(fUnzip);
+
+			if (file.getName().endsWith(".bz2")) {
+				BZip2CompressorInputStream bz2In = new BZip2CompressorInputStream(in);
+				synchronized (bz2In) {
+					final byte[] buffer = new byte[8192];
+					int n = 0;
+					while (-1 != (n = bz2In.read(buffer))) {
+						out.write(buffer, 0, n);
+					}
+					out.close();
+					bz2In.close();
+				}
+			} else if (file.getName().endsWith(".xz")) {
+				XZInputStream xzIn = new XZInputStream(in);
+				synchronized (xzIn) {
+					final byte[] buffer = new byte[8192];
+					int n = 0;
+					while (-1 != (n = xzIn.read(buffer))) {
+						out.write(buffer, 0, n);
+					}
+					out.close();
+					xzIn.close();
+				}
+			} else if (file.getName().endsWith(".zip")) {
+				ZipArchiveInputStream zipIn = new ZipArchiveInputStream(in);
+				synchronized (zipIn) {
+					final byte[] buffer = new byte[8192];
+					int n = 0;
+					while (-1 != (n = zipIn.read(buffer))) {
+						out.write(buffer, 0, n);
+					}
+					out.close();
+					zipIn.close();
+				}
+			} else if (file.getName().endsWith(".tar.gz")) {
+				GzipCompressorInputStream gzIn = new GzipCompressorInputStream(in);
+				synchronized (gzIn) {
+					final byte[] buffer = new byte[8192];
+					int n = 0;
+					while (-1 != (n = gzIn.read(buffer))) {
+						out.write(buffer, 0, n);
+					}
+					out.close();
+					gzIn.close();
+				}
+			}
+
+			file.delete();
+
+			if (fUnzip != null)
+				ret = fUnzip;
+		} catch (Exception ex) {
+			ret = file;
+		}
+		return ret;
+	}
+	
+	public static String getURLFileName(URL pURL) {
+		String[] str = pURL.getFile().split("/");
+		return str[str.length - 1];
 	}
 }
