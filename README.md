@@ -70,6 +70,8 @@ Andre Valdestilhas. (2017, June 27). firmao/wimu: Where is my URI?. Zenodo. http
 }
 </pre>
 
+[Paper](https://2018.eswc-conferences.org/wp-content/uploads/2018/02/ESWC2018_paper_57.pdf) accepted at [ESWC 2018](https://2018.eswc-conferences.org/)
+
 ## Acknowledgment
 This research has been partially supported by CNPq Brazil under grants No. 201536/2014-5 and H2020 projects SLIPO (GA no. 731581) and HOBBIT (GA no. 688227) as well as the DFG project LinkingLOD (project no. NG 105/3-2), the BMWI Projects SAKE (project no. 01MD15006E) and GEISER (project no. 01MD16014E).
 
