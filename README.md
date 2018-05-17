@@ -10,6 +10,7 @@ We rank the corresponding datasets by following the rationale upon which a datas
 We finally show use-cases of applications that can immediately benefit from our simple yet useful service.
 
 ## Website: http://wimu.aksw.org/
+## [Paper accepted at ESWC 2018](https://2018.eswc-conferences.org/wp-content/uploads/2018/02/ESWC2018_paper_57.pdf).
 
 ## [The manual](https://dice-group.github.io/wimu/)
 
