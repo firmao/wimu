@@ -1,11 +1,21 @@
 package servlets;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -60,6 +70,9 @@ import org.rdfhdt.hdt.hdt.HDT;
 import org.rdfhdt.hdt.hdt.HDTManager;
 import org.rdfhdt.hdtjena.HDTGraph;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 public class LuceneUtil {
 
 	// Lucene
@@ -73,15 +86,17 @@ public class LuceneUtil {
 	private static MMapDirectory directory;
 
 	public static void main(String[] args) throws IOException {
-		HDTQueryMan.loadFileMap("md5HDT.csv");
-		String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
-		// String dirHDT = "/media/andre/TOSHIBA\\ EXT/hdtAmazon/hdtFiles/";
-		// createHDTLuceneIndex("dirLuceneHDT", new File(dirHDT));
-		File f = new File("/media/andre/DATA/linux/linklion2/f100.csv");
-		processFileBatch(f);
+		// HDTQueryMan.loadFileMap("md5HDT.csv");
+		// String dirHDT = System.getProperty("user.home") + "/hdtDatasets";
+		// // String dirHDT = "/media/andre/TOSHIBA\\ EXT/hdtAmazon/hdtFiles/";
+		// // createHDTLuceneIndex("dirLuceneHDT", new File(dirHDT));
+		// File f = new File("/media/andre/DATA/linux/linklion2/f100.csv");
+		// processFileBatch(f, "NO IP");
+		//getLODdataJson("http://dbpedia.org/resource/Leipzig");
+		System.out.println(queryLOD_a_lot("http://viaf.org/viaf/59183456"));
 	}
 
-	private static void processFileBatch(File pFile) throws IOException {
+	private static void processFileBatch(File pFile, String ipCli) throws IOException {
 		PrintWriter writer = new PrintWriter("/media/andre/DATA/linux/linklion2/p100.csv", "UTF-8");
 		List<String> lstLines = FileUtils.readLines(pFile, "UTF-8");
 		Set<String> dirs = new HashSet<String>();
@@ -94,7 +109,7 @@ public class LuceneUtil {
 		String dHDTFiles = System.getProperty("user.home") + "/hdtDatasets";
 		lstLines.forEach(line -> {
 			try {
-				Map<String, Integer> map = search(line, 1000, dirs);
+				Map<String, Integer> map = search(line, 1000, dirs, ipCli);
 				map.putAll(HDTQueryMan.findDatasetsHDT(line, dHDTFiles));
 				Map<String, Integer> mRes = sortByComparator(map, false, 1);
 				if (mRes.size() > 0) {
@@ -207,8 +222,9 @@ public class LuceneUtil {
 		// iwriter.close();
 	}
 
-	public static Map<String, Integer> search(String uri, int maxResults, Set<String> dirs)
+	public static Map<String, Integer> search(String uri, int maxResults, Set<String> dirs, String ipCli)
 			throws IOException, ParseException {
+		LogURI(uri, ipCli);
 		ConcurrentHashMap<String, Integer> mResults = new ConcurrentHashMap<String, Integer>();
 		dirs.parallelStream().forEach(dir -> {
 			try {
@@ -249,11 +265,151 @@ public class LuceneUtil {
 				// e.printStackTrace();
 			}
 		});
+		if (mResults.size() < 1) {
+			mResults.putAll(getLODdataJson(uri));
+		}
 		return mResults;
 	}
 
-	public static Map<String, Integer> search(String uri, int maxResults, String luceneDir)
+	public static ConcurrentHashMap<String, Integer> getLODdataJson(String uri) {
+		ConcurrentHashMap<String, Integer> ret = new ConcurrentHashMap<String, Integer>();
+		// read Json from: https://lod-cloud.net/lod-data.json 
+		//or https://raw.githubusercontent.com/AxelPolleres/LODanalysis/master/lod-data.json
+		ret.putAll(queryLOD_a_lot(uri));
+		if (ret.size() > 0) {
+			return ret;
+		}
+
+		String jSonURL = "https://lod-cloud.net/lod-data.json";
+		if(!isGoodURL(jSonURL)){
+			jSonURL = "https://raw.githubusercontent.com/dice-group/wimu/master/lod-data.json";
+		}
+		System.out.println("Using: " + jSonURL);
+		try {
+			URL url = new URL(jSonURL);
+			InputStreamReader reader = null;
+			try {
+				reader = new InputStreamReader(url.openStream());
+			} catch (Exception e) {
+				Thread.sleep(5000);
+				reader = new InputStreamReader(url.openStream());
+			}
+			Gson gson = new Gson();
+			Type t = new TypeToken<Map<String, Object>>() {
+			}.getType();
+			Map<String, Object> map = gson.fromJson(reader, t);
+			String domain = getDomainName(uri);
+			// String domain = domain1.substring(0, domain1.indexOf("."));
+			map.forEach((x, y) -> {
+				// System.out.println("key : " + x + " , value : " + y);
+				// if(x.contains(domain)){
+				Map<String, Object> m1 = (Map<String, Object>) map.get(x);
+				List<Map<String, Object>> lst = (List<Map<String, Object>>) m1.get("sparql");
+				for (Map<String, Object> m2 : lst) {
+					//System.out.println(m2.values());
+					if ((m2.get("access_url").toString().contains(domain)) && (m2.get("status").equals("OK"))) {
+						ret.put(m2.get("access_url").toString(), -1);
+					}
+				}
+
+				// ret.put("endpoint", 0);
+				// }
+			});
+			// LODbean[] wData = new Gson().fromJson(reader, LODbean[].class);
+			// for (LODbean wDs : wData) {
+			// // ret = wDs;
+			// break;
+			// }
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		// System.out.println(ret);
+		return ret;
+	}
+	
+	private static boolean isGoodURL(String url) {
+		try {
+			HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+			connection.setRequestMethod("HEAD");
+			int responseCode = connection.getResponseCode();
+			if ((responseCode == 200) || (responseCode == 400)) {
+				return true;
+			} else
+				return false;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	private static ConcurrentHashMap<String, Integer> queryLOD_a_lot(String uri) {
+		ConcurrentHashMap<String, Integer> ret = new ConcurrentHashMap<String, Integer>();
+		try {
+			URL url = new URL(
+					"https://hdt.lod.labs.vu.nl/triple?g=%3Chttps%3A//hdt.lod.labs.vu.nl/graph/LOD-a-lot%3E&s=%3C" + uri
+							+ "%3E");
+			BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+
+			if (in.readLine() != null) {
+				ret.put("https://hdt.lod.labs.vu.nl/", 0);
+				return ret;
+			}
+
+			url = new URL(
+					"https://hdt.lod.labs.vu.nl/triple?g=%3Chttps%3A//hdt.lod.labs.vu.nl/graph/LOD-a-lot%3E&o=%3C" + uri
+							+ "%3E");
+			in = new BufferedReader(new InputStreamReader(url.openStream()));
+
+			if (in.readLine() != null) {
+				ret.put("https://hdt.lod.labs.vu.nl/", 0);
+				return ret;
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// ret.put(m2.get("access_url").toString(), -1);
+
+		return ret;
+	}
+
+	public static String getDomainName(String url) throws URISyntaxException {
+		URI uri = new URI(url);
+		String domain = uri.getHost();
+		// domain = domain.startsWith("www.") ? domain.substring(4) : domain;
+		// domain = domain.substring(0, domain.indexOf("."));
+		// return domain;
+		return domain.startsWith("www.") ? domain.substring(4) : domain;
+	}
+
+	private static void LogURI(String uri, String ipCli) {
+		File file = new File("LogURI.tsv");
+		String msg = "";
+		String date = LocalDateTime.now().toString();
+		msg += "[" + date + "]\t" + uri + "\t" + ipCli + "\n";
+		try {
+			if (!file.exists()) {
+				file.createNewFile();
+				System.out.println("LOGURI created at: " + file.getAbsolutePath());
+			}
+			//transform in MB
+			long sizeInMb = file.length() / (1024 * 1024);
+			if(sizeInMb > 10){
+				file.renameTo(new File(date.substring(0, 10) + file.getName()));
+				file = new File("LogURI.tsv");
+				file.createNewFile();
+				System.out.println("New LOGURI created at: " + file.getAbsolutePath());
+			}
+			// 3rd parameter boolean append = true
+			FileUtils.writeStringToFile(file, msg, Charset.defaultCharset(), true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public static Map<String, Integer> search(String uri, int maxResults, String luceneDir, String ipCli)
 			throws IOException, ParseException {
+		LogURI(uri, ipCli);
 		ConcurrentHashMap<String, Integer> mResults = new ConcurrentHashMap<String, Integer>();
 		File indexDirectory = new File(luceneDir);
 		MMapDirectory directory = new MMapDirectory(indexDirectory);
@@ -287,10 +443,14 @@ public class LuceneUtil {
 		if (directory != null) {
 			directory.close();
 		}
+		if (mResults.size() < 1) {
+			mResults.putAll(getLODdataJson(uri));
+		}
+
 		return mResults;
 	}
 
-	public static Set<WIMUri> search(File fLink, int maxResults, Set<String> dirs) {
+	public static Set<WIMUri> search(File fLink, int maxResults, Set<String> dirs, String dirHDT, String ipCli) {
 		Set<WIMUri> ret = new HashSet<WIMUri>();
 
 		try {
@@ -332,12 +492,21 @@ public class LuceneUtil {
 					String target = triple.getObject().toString();
 					WIMUri wURI = new WIMUri(source, target);
 					try {
-						Map<String, Integer> mSource = sortByComparator(search(source, maxResults, dirs), false, 1);
-						Map<String, Integer> mTarget = sortByComparator(search(target, maxResults, dirs), false, 1);
-						String datasetS = mSource.keySet().iterator().next();
-						String datasetT = mTarget.keySet().iterator().next();
+						Map<String, Integer> mHDTs = HDTQueryMan.findDatasetsHDT(source, dirHDT);
+						Map<String, Integer> mHDTt = HDTQueryMan.findDatasetsHDT(target, dirHDT);
+						mHDTs.putAll(search(source, maxResults, dirs, ipCli));
+						mHDTt.putAll(search(target, maxResults, dirs, ipCli));
+						Map<String, Integer> mSource = sortByComparator(mHDTs, false, 1);
+						Map<String, Integer> mTarget = sortByComparator(mHDTt, false, 1);
+						String datasetS = "";
+						String datasetT = "";
 						String md5 = null;
 						try {
+							datasetS = mSource.keySet().iterator().next();
+							if (datasetS.contains("dbpedia") && (datasetS.contains("anchor_text"))) {
+								throw new Exception("dbpedia:anchor_text not allowed in WIMU");
+							}
+							wURI.setcDatatypesS(mSource.values().iterator().next().intValue());
 							md5 = datasetS.substring(34, datasetS.indexOf("?"));
 							wURI.setDatasetS(HDTQueryMan.md5Names.get(md5));
 							wURI.setHdtS(datasetS);
@@ -345,14 +514,17 @@ public class LuceneUtil {
 							wURI.setDatasetS(datasetS);
 						}
 						try {
+							datasetT = mTarget.keySet().iterator().next();
+							if (datasetT.contains("dbpedia") && (datasetT.contains("anchor_text"))) {
+								throw new Exception("dbpedia:anchor_text not allowed in WIMU");
+							}
+							wURI.setcDatatypesT(mTarget.values().iterator().next().intValue());
 							md5 = datasetT.substring(34, datasetT.indexOf("?"));
 							wURI.setDatasetT(HDTQueryMan.md5Names.get(md5));
 							wURI.setHdtT(datasetT);
 						} catch (Exception ex) {
 							wURI.setDatasetT(datasetT);
 						}
-						wURI.setcDatatypesS(mSource.values().iterator().next().intValue());
-						wURI.setcDatatypesT(mTarget.values().iterator().next().intValue());
 						ret.add(wURI);
 					} catch (IOException | ParseException e) {
 						// TODO Auto-generated catch block
@@ -422,13 +594,18 @@ public class LuceneUtil {
 		int count = 0;
 		// Maintaining insertion order with the help of LinkedList
 		Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
-		for (Entry<String, Integer> entry : list) {
-			if (count > (top - 1))
-				break;
-			sortedMap.put(entry.getKey(), entry.getValue());
-			++count;
+		if (top > 0) {
+			for (Entry<String, Integer> entry : list) {
+				if (count > (top - 1))
+					break;
+				sortedMap.put(entry.getKey(), entry.getValue());
+				++count;
+			}
+		} else {
+			for (Entry<String, Integer> entry : list) {
+				sortedMap.put(entry.getKey(), entry.getValue());
+			}
 		}
-
 		return sortedMap;
 	}
 }
